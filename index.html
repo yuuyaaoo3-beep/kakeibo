@@ -756,67 +756,121 @@ body {
   <h2 style="font-size:18px;font-weight:700;margin-bottom:20px;">データインポート</h2>
   <div style="display:grid;gap:16px;">
 
-    <!-- CSV import -->
+    <!-- CSV インポート（統合版） -->
     <div class="card">
       <div class="card-header">
         <span class="card-title">CSV インポート</span>
-        <select class="form-control" style="width:200px;padding:5px 10px;font-size:12px;" id="csv-source">
-          <option value="rakuten_bank">楽天銀行</option>
-          <option value="mizuho">みずほ銀行</option>
-          <option value="sbi">住信SBIネット銀行</option>
-          <option value="rakuten_card">楽天カード</option>
-          <option value="olive">Olive</option>
-        </select>
       </div>
+
+      <!-- ソース選択 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;" id="source-select-area">
+        <div>
+          <label class="form-label">取込元を選択</label>
+          <select class="form-control" id="csv-source" onchange="onSourceChange()">
+            <optgroup label="銀行">
+              <option value="rakuten_bank">楽天銀行</option>
+              <option value="mizuho">みずほ銀行</option>
+              <option value="sbi">住信SBIネット銀行</option>
+            </optgroup>
+            <optgroup label="クレジットカード">
+              <option value="rakuten_card">楽天カード</option>
+              <option value="olive">Olive（三井住友）</option>
+            </optgroup>
+            <optgroup label="電子マネー">
+              <option value="paypay_csv">PayPay</option>
+            </optgroup>
+          </select>
+        </div>
+        <div id="paypay-hint" style="display:none;">
+          <label class="form-label">PayPay CSV の取得方法</label>
+          <div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg2);border-radius:6px;padding:8px;">
+            アプリ →「取引履歴」→ 右上ダウンロードアイコン → 期間指定 →「ダウンロード申請」→ 通知後に保存
+          </div>
+        </div>
+      </div>
+
+      <!-- ドロップゾーン -->
       <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
         <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(this)">
         <div class="drop-icon">📂</div>
-        <p style="font-size:13px;font-weight:500;">クリックまたはドラッグ&ドロップでCSVを選択</p>
-        <p style="font-size:11px;color:var(--text3);margin-top:4px;">各銀行・カードのWeb明細からダウンロードしたCSVをご利用ください</p>
+        <p style="font-size:13px;font-weight:500;">クリックまたはドラッグ&ドロップで CSV を選択</p>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;" id="drop-hint">各銀行・カードの Web 明細からダウンロードした CSV をご利用ください</p>
       </div>
       <div id="import-preview"></div>
+      <div id="paypay-status" style="margin-top:8px;font-size:12px;"></div>
     </div>
 
-    <!-- PayPay API -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">PayPay API 連携</span>
-        <span class="badge badge-fixed-monthly">設定必要</span>
-      </div>
-      <div class="form-group">
-        <label class="form-label">PayPay Business API キー</label>
-        <input type="password" class="form-control" id="paypay-key" placeholder="API Key">
-        <p class="form-hint">PayPay Business アカウントのAPIキーを入力してください</p>
-      </div>
-      <div class="form-group">
-        <label class="form-label">API シークレット</label>
-        <input type="password" class="form-control" id="paypay-secret" placeholder="API Secret">
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary btn-sm" onclick="testPayPay()">接続テスト</button>
-        <button class="btn btn-sm" onclick="fetchPayPay()">支払い履歴を取得</button>
-      </div>
-      <div id="paypay-status" style="margin-top:10px;font-size:12px;color:var(--text3);"></div>
-    </div>
-
-    <!-- Suica -->
+    <!-- Suica (Claude in Chrome) -->
     <div class="card">
       <div class="card-header">
         <span class="card-title">Suica 履歴取得（Claude in Chrome）</span>
         <span class="badge badge-variable-monthly">半自動</span>
       </div>
-      <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.8;margin-bottom:14px;">
-        <p style="font-weight:500;margin-bottom:6px;">手順</p>
-        <ol style="padding-left:18px;color:var(--text2);">
-          <li>Claude in Chrome を使って <strong>Suica の My Page</strong> にログイン</li>
-          <li>「ご利用履歴」ページを開く</li>
-          <li>下のボタンを押して自動抽出を開始</li>
-        </ol>
+
+      <!-- Step indicator -->
+      <div style="display:flex;gap:0;margin-bottom:16px;">
+        <div style="flex:1;text-align:center;padding:8px 4px;background:var(--accent);color:#fff;border-radius:6px 0 0 6px;font-size:12px;font-weight:500;">① Claude に指示をコピー</div>
+        <div style="flex:1;text-align:center;padding:8px 4px;background:var(--bg3);color:var(--text2);font-size:12px;font-weight:500;">② Suica で実行</div>
+        <div style="flex:1;text-align:center;padding:8px 4px;background:var(--bg3);color:var(--text2);border-radius:0 6px 6px 0;font-size:12px;font-weight:500;">③ JSON を貼り付け</div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-sm" onclick="startSuicaScrape()">🚃 Suica 履歴を自動取得</button>
+
+      <!-- Step 1 -->
+      <div style="margin-bottom:14px;">
+        <p style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">① Claude in Chrome に以下の指示を貼り付けて実行してください</p>
+        <div style="position:relative;">
+          <pre id="suica-prompt" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:var(--text2);margin:0;max-height:200px;overflow-y:auto;">モバイル Suica のマイページ（https://www.mobilesuica.com/）を開いてください。
+すでにログイン済みの場合はそのまま進めてください。
+
+「ゆう」カードの利用履歴ページ（以下のURLを直接開いてください）に移動してください：
+https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
+
+表示されている利用履歴テーブルの全データを読み取り、以下の JSON 形式で出力してください。
+
+[
+  {
+    "date": "YYYY-MM-DD",
+    "memo": "利用場所（入口 → 出口）または内容",
+    "amount": 金額（数値・マイナスなし・円単位）,
+    "isStation": true,
+    "isCharge": false
+  }
+]
+
+ルール：
+- 月日は今年（2026年）として YYYY-MM-DD 形式に変換
+- 鉄道・地下鉄・バスなど交通機関は isStation: true
+- 物販・コンビニなどは isStation: false
+- チャージ（「チャージ（モバイル）」など）は isCharge: true、isStation: false
+- 金額は数値のみ（カンマ・円記号・マイナス符号なし）
+- 金額が 0 の行も含めて出力する
+- 「繰越」行は除外する
+- JSON のみ出力し、説明文は不要</pre>
+          <button class="btn btn-sm" style="position:absolute;top:8px;right:8px;" onclick="copySuicaPrompt()">コピー</button>
+        </div>
       </div>
-      <div id="suica-status" style="margin-top:10px;font-size:12px;color:var(--text3);"></div>
+
+      <!-- Step 2 -->
+      <div style="background:var(--blue-bg);border-radius:8px;padding:12px;font-size:12px;margin-bottom:14px;line-height:1.7;">
+        <p style="font-weight:500;color:var(--blue);margin-bottom:4px;">② 実行時の注意</p>
+        <ul style="padding-left:16px;color:var(--text2);">
+          <li>Claude in Chrome を開いた状態で上記を貼り付けて送信</li>
+          <li>すでに mobilesuica.com にログイン済みであればそのまま使える</li>
+          <li>1ページに最大 100 件表示されます</li>
+          <li>チャージ（+金額）はインポート時に自動スキップされます</li>
+          <li>「物販」はカテゴリ「買い物・日用品」として取り込まれます（後で変更可）</li>
+        </ul>
+      </div>
+
+      <!-- Step 3: JSON貼り付け -->
+      <div>
+        <p style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">③ Claude が出力した JSON をここに貼り付け</p>
+        <textarea id="suica-json" class="form-control" style="height:120px;font-size:12px;font-family:var(--mono);" placeholder='[{"date":"2026-04-17","memo":"五反田 → 渋谷","amount":199,"isStation":true,"isCharge":false}]'></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="importSuicaJSON()">🚃 Suica データをインポート</button>
+          <button class="btn btn-sm" onclick="document.getElementById('suica-json').value=''">クリア</button>
+        </div>
+      </div>
+      <div id="suica-status" style="margin-top:10px;font-size:12px;"></div>
     </div>
   </div>
 </section>
@@ -1474,6 +1528,9 @@ function parseCSV(text, source) {
     preview = parseRakutenCard(rows);
   } else if (source === 'olive') {
     preview = parseOlive(rows);
+  } else if (source === 'paypay_csv') {
+    parsePayPayCSV(text); // 専用パーサーを呼び出して終了
+    return;
   }
 
   // フォールバック：ヒューリスティック解析
@@ -1876,65 +1933,259 @@ dz.addEventListener('drop', e=>{
   readerUtf.readAsText(file, 'UTF-8');
 });
 
+
 // ═══════════════════════════════════════════════════
-// PayPay (stub - would need backend proxy in production)
+// PayPay CSV インポート
 // ═══════════════════════════════════════════════════
-function testPayPay() {
+function handlePayPayCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const readerUtf = new FileReader();
+  readerUtf.onload = e => {
+    const text = e.target.result;
+    // 文字化け検出 → Shift-JISフォールバック
+    if ((text.match(/\uFFFD/g)||[]).length > 5) {
+      const readerSjis = new FileReader();
+      readerSjis.onload = ev => parsePayPayCSV(ev.target.result);
+      readerSjis.readAsText(file, 'Shift_JIS');
+    } else {
+      parsePayPayCSV(text);
+    }
+  };
+  readerUtf.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+function parsePayPayCSV(text) {
   const status = document.getElementById('paypay-status');
-  const key = document.getElementById('paypay-key').value;
-  if (!key) { status.textContent = '⚠ APIキーを入力してください'; return; }
-  status.textContent = '接続確認中…';
-  // PayPay Business API は CORS 制限のためブラウザから直接は呼び出せない
-  // 本番では Node.js / Vercel Functions 等のサーバーサイドプロキシが必要
-  setTimeout(()=>{
-    status.innerHTML = `<span style="color:var(--amber)">⚠ ブラウザから直接PayPay APIは呼び出せません（CORS制限）。<br>Vercel Functionsなどのサーバーレス関数をプロキシとして設置すると連携できます。<br>現在はCSVインポートをご利用ください。</span>`;
-  }, 800);
+  const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines = raw.split('\n').filter(l => l.trim());
+  const rows = lines.map(l => splitCSVLine(l));
+
+  // ヘッダー行を探す
+  const headerIdx = rows.findIndex(r =>
+    r.some(c => /取引日時|取引日/.test(c)) &&
+    r.some(c => /取引内容|内容/.test(c))
+  );
+  if (headerIdx < 0) {
+    status.innerHTML = '<span style="color:var(--red)">⚠ PayPayのCSV形式を認識できませんでした。PayPayアプリからダウンロードしたCSVファイルをご利用ください。</span>';
+    return;
+  }
+
+  const header = rows[headerIdx];
+  const dateIdx    = header.findIndex(c => /取引日時|取引日/.test(c));
+  const typeIdx    = header.findIndex(c => /取引内容|内容/.test(c));
+  const shopIdx    = header.findIndex(c => /取引先|店舗|加盟店/.test(c));
+  const outIdx     = header.findIndex(c => /出金|支払/.test(c));
+  const inIdx      = header.findIndex(c => /入金|チャージ|受取/.test(c));
+
+  const preview = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length < 3) continue;
+
+    // 日付：YYYY/MM/DD HH:MM:SS → YYYY-MM-DD
+    const rawDate = dateIdx >= 0 ? r[dateIdx] : r[0];
+    const dateMatch = rawDate.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+    if (!dateMatch) continue;
+    const date = `${dateMatch[1]}-${dateMatch[2].padStart(2,'0')}-${dateMatch[3].padStart(2,'0')}`;
+
+    const txType = typeIdx >= 0 ? r[typeIdx] : '';
+    const shop   = shopIdx >= 0 ? r[shopIdx] : '';
+    const memo   = shop || txType || '';
+
+    const outStr = outIdx >= 0 ? r[outIdx] : '';
+    const inStr  = inIdx  >= 0 ? r[inIdx]  : '';
+    // 金額：数字以外を全て除去してから parse（全角カンマ・ハイフン・円記号等に対応）
+    const toAmt = s => { const d = (s||'').replace(/[^0-9]/g,''); return d ? parseInt(d,10) : NaN; };
+    const outAmt = toAmt(outStr);
+    const inAmt  = toAmt(inStr);
+
+    // チャージ・銀行出金・ポイント付与は収入（isExpense: false）
+    const isChargeType = /チャージ|入金|受取|ポイント獲得|ポイント付与|給与/.test(txType);
+
+    if (!isNaN(outAmt) && outAmt > 0) {
+      const cat = guessCategory(memo);
+      preview.push({
+        date, memo, amount: outAmt,
+        category: cat,
+        tag: categories.find(c=>c.name===cat)?.defaultTag || '毎月・変動',
+        isExpense: true, type: 'expense', source: 'paypay'
+      });
+    } else if (!isNaN(inAmt) && inAmt > 0) {
+      // チャージは収支カウントから除外すべきケースが多いが、
+      // ユーザーがプレビューで選択できるようにそのまま収入として表示
+      preview.push({
+        date, memo: txType || memo, amount: inAmt,
+        category: '収入',
+        tag: '収入・予算内',
+        isExpense: false, type: 'income', source: 'paypay'
+      });
+    }
+  }
+
+  if (!preview.length) {
+    status.innerHTML = '<span style="color:var(--red)">⚠ データを認識できませんでした。PayPayアプリからダウンロードしたCSVファイルか確認してください。</span>';
+    return;
+  }
+
+  // プレビュー画面へ（チェックボックス付き）
+  window._importRows = preview;
+  renderImportPreview(preview);
+  document.getElementById('import-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const expCnt = preview.filter(r => r.isExpense !== false).length;
+  const incCnt = preview.length - expCnt;
+  status.innerHTML = `<span style="color:var(--accent)">✓ ${preview.length}件を検出（支出 ${expCnt}件 / 収入 ${incCnt}件）。下のプレビューで確認してインポートしてください。</span>`;
 }
-function fetchPayPay() { testPayPay(); }
+
+// PayPay ドロップゾーンは共通ドロップゾーンに統合済み
+// ═══════════════════════════════════════════════════
+// PayPay 旧コード（互換性のため残す）
+// ═══════════════════════════════════════════════════
+function copyPayPayPrompt() {
+  const text = document.getElementById('paypay-prompt').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
+  }).catch(() => {
+    // フォールバック: テキスト選択
+    const el = document.getElementById('paypay-prompt');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+
+function importPayPayJSON() {
+  const raw = document.getElementById('paypay-json').value.trim();
+  const status = document.getElementById('paypay-status');
+  if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
+  try {
+    // JSONブロックのコードフェンスを除去
+    const cleaned = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    const data = JSON.parse(cleaned);
+    if (!Array.isArray(data)) throw new Error('配列ではありません');
+
+    const newTxns = data.map(r => {
+      const isIncome = r.isIncome === true;
+      const amount = Math.abs(Number(r.amount) || 0);
+      if (!r.date || !amount) return null;
+      const cat = isIncome ? '収入' : guessCategory(r.memo || '');
+      return {
+        id: crypto.randomUUID(),
+        date: normalizeDate(r.date) || r.date,
+        type: isIncome ? 'income' : 'expense',
+        amount,
+        category: cat,
+        tag: isIncome ? '収入・予算内' : (categories.find(c=>c.name===cat)?.defaultTag || '毎月・変動'),
+        memo: r.memo || '',
+        shared: false,
+        source: 'paypay'
+      };
+    }).filter(Boolean);
+
+    if (!newTxns.length) throw new Error('有効なデータがありません');
+
+    // プレビューを経由してインポート（チェックボックス付き）
+    window._importRows = newTxns.map(t => ({
+      date: t.date,
+      memo: t.memo,
+      amount: t.amount,
+      category: t.category,
+      tag: t.tag,
+      isExpense: t.type !== 'income',
+      type: t.type,
+      source: 'paypay'
+    }));
+    renderImportPreview(window._importRows);
+    // プレビューをCSVインポートセクションにスクロール
+    document.getElementById('import-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    status.innerHTML = `<span style="color:var(--accent)">✓ ${newTxns.length}件を検出。下のプレビューで確認してインポートしてください。</span>`;
+    document.getElementById('paypay-json').value = '';
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--red)">⚠ JSON の形式が正しくありません。Claude の出力をそのまま貼り付けてください。（${e.message}）</span>`;
+  }
+}
 
 // ═══════════════════════════════════════════════════
-// Suica scrape (Claude in Chrome instruction)
+// Suica（Claude in Chrome スクレイプ）
 // ═══════════════════════════════════════════════════
-function startSuicaScrape() {
-  const status = document.getElementById('suica-status');
-  status.innerHTML = `
-    <div style="background:var(--bg2);border-radius:8px;padding:12px;margin-top:8px;font-size:12px;line-height:1.8;">
-      <p style="font-weight:500;margin-bottom:6px;">Claude in Chrome に以下の指示をコピーして実行してください：</p>
-      <code style="display:block;background:var(--bg3);padding:10px;border-radius:6px;white-space:pre-wrap;font-size:11px;user-select:all;">Suicaのマイページ（https://www.mySuica.jp/）を開いて、利用履歴テーブルを読み込んでください。
-各行の「日付」「利用場所/店舗名」「金額」を抽出し、以下のJSON形式でまとめてください：
-[{"date":"YYYY-MM-DD","memo":"場所名","amount":金額,"isStation":true/false}]
-※ 駅名・路線名の場合はisStation:true、物販・コンビニはisStation:falseにしてください。</code>
-      <button class="btn btn-sm" style="margin-top:8px;" onclick="pasteFromClipboard()">📋 JSONを貼り付けてインポート</button>
-      <textarea id="suica-json" class="form-control" style="margin-top:8px;height:80px;display:none;" placeholder='[{"date":"2025-04-01","memo":"品川→渋谷","amount":200,"isStation":true}]'></textarea>
-      <button class="btn btn-primary btn-sm" id="suica-import-btn" style="margin-top:6px;display:none;" onclick="importSuicaJSON()">Suicaデータをインポート</button>
-    </div>`;
-}
-
-function pasteFromClipboard() {
-  document.getElementById('suica-json').style.display = 'block';
-  document.getElementById('suica-import-btn').style.display = 'inline-flex';
+function copySuicaPrompt() {
+  const text = document.getElementById('suica-prompt').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
+  }).catch(() => {
+    const el = document.getElementById('suica-prompt');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
 }
 
 function importSuicaJSON() {
+  const raw = document.getElementById('suica-json').value.trim();
+  const status = document.getElementById('suica-status');
+  if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
   try {
-    const raw = JSON.parse(document.getElementById('suica-json').value);
-    const newTxns = raw.map(r => ({
-      id: crypto.randomUUID(),
-      date: r.date,
-      type: 'expense',
-      amount: Math.abs(r.amount),
-      category: r.isStation ? '交通費' : 'その他',
-      tag: r.isStation ? '毎月・変動' : '不定・変動',
-      memo: r.memo,
-      shared: false,
-      source: 'suica'
-    }));
-    transactions.push(...newTxns);
-    saveData(transactions);
-    document.getElementById('suica-status').innerHTML = `<p style="color:var(--accent);font-size:12px;margin-top:8px;">✓ ${newTxns.length}件のSuicaデータをインポートしました</p>`;
-    renderAll();
+    const cleaned = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    const data = JSON.parse(cleaned);
+    if (!Array.isArray(data)) throw new Error('配列ではありません');
+
+    const totalCount  = data.length;
+    const chargeCount = data.filter(r => r.isCharge === true).length;
+    const zeroCount   = data.filter(r => !r.isCharge && (Number(r.amount) || 0) === 0).length;
+
+    // チャージ（isCharge: true）と 0円 は自動スキップ
+    const filtered = data.filter(r => {
+      if (r.isCharge === true) return false;       // チャージ除外
+      if ((Number(r.amount) || 0) === 0) return false; // 0円除外
+      return true;
+    });
+
+    if (!filtered.length) throw new Error('有効なデータがありません（チャージ・0円を除外した結果 0件）');
+
+    // 物販のカテゴリを「買い物・日用品」に固定
+    const previewRows = filtered.map(r => {
+      const amount = Math.abs(Number(r.amount) || 0);
+      const isStation = r.isStation !== false;
+      const cat = isStation ? '交通費' : '買い物・日用品';
+      return {
+        date: normalizeDate(r.date) || r.date,
+        memo: r.memo || '',
+        amount,
+        category: cat,
+        tag: cat === '交通費' ? '毎月・変動' : (categories.find(c=>c.name===cat)?.defaultTag || '不定・変動'),
+        isExpense: true,
+        type: 'expense',
+        source: 'suica'
+      };
+    });
+
+    window._importRows = previewRows;
+    renderImportPreview(previewRows);
+
+    // プレビューへスクロール（インポートタブへ切替）
+    showPage('import');
+    setTimeout(() => {
+      document.getElementById('import-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
+    const skipMsg = [];
+    if (chargeCount > 0) skipMsg.push(`チャージ ${chargeCount}件`);
+    if (zeroCount   > 0) skipMsg.push(`0円 ${zeroCount}件`);
+    const skipText = skipMsg.length ? `（${skipMsg.join('・')}は自動スキップ）` : '';
+
+    status.innerHTML = `<span style="color:var(--accent)">✓ ${totalCount}件中 ${previewRows.length}件を検出 ${skipText}。下のプレビューで確認してインポートしてください。</span>`;
+    document.getElementById('suica-json').value = '';
   } catch(e) {
-    alert('JSON の形式が正しくありません。Claude in Chromeの出力をそのまま貼り付けてください。');
+    status.innerHTML = `<span style="color:var(--red)">⚠ エラー：${e.message}。Claude の出力をそのまま貼り付けてください。</span>`;
   }
 }
 
@@ -2283,6 +2534,19 @@ document.addEventListener('change', e => {
   }
   updateBulkBar();
 });
+
+
+function onSourceChange() {
+  const src = document.getElementById('csv-source').value;
+  const hint = document.getElementById('paypay-hint');
+  const dropHint = document.getElementById('drop-hint');
+  if (hint) hint.style.display = src === 'paypay_csv' ? 'block' : 'none';
+  if (dropHint) {
+    dropHint.textContent = src === 'paypay_csv'
+      ? 'PayPay アプリからダウンロードした CSV をご利用ください（UTF-8）'
+      : '各銀行・カードの Web 明細からダウンロードした CSV をご利用ください';
+  }
+}
 
 // ── Init ──
 renderAll();
