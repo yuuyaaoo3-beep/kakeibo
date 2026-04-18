@@ -718,7 +718,14 @@ body {
 <!-- ══════════════════════════════════════════════════ -->
 <section id="page-transactions" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-    <h2 style="font-size:18px;font-weight:700;">明細一覧</h2>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <h2 style="font-size:18px;font-weight:700;">明細一覧</h2>
+      <div id="bulk-delete-bar" style="display:none;align-items:center;gap:8px;">
+        <span id="bulk-count" style="font-size:13px;color:var(--text2);"></span>
+        <button class="btn btn-sm btn-danger" onclick="bulkDelete()">まとめて削除</button>
+        <button class="btn btn-sm" onclick="clearBulkSelect()">選択解除</button>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <input type="text" class="form-control" style="width:180px;padding:6px 10px;font-size:13px;" placeholder="検索…" oninput="renderTransactions()" id="txn-search">
       <select class="form-control" style="width:130px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-cat-filter">
@@ -1221,8 +1228,14 @@ function renderTxnTable(list, compact) {
     const eff = effectiveAmount(t);
     const isIncome = t.type === 'income';
     const safeId = encodeURIComponent(t.id);
+    const isChecked = selectedIds.has(t.id);
     return `
-    <tr>
+    <tr style="${isChecked ? 'background:var(--blue-bg);' : ''}">
+      ${!compact ? `<td style="width:36px;text-align:center;">
+        <input type="checkbox" class="bulk-cb" data-id="${safeId}"
+          style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
+          ${isChecked ? 'checked' : ''}>
+      </td>` : ''}
       <td><span class="txn-date">${t.date}</span></td>
       <td>
         <span class="cat-dot" style="background:${color}"></span>
@@ -1242,8 +1255,15 @@ function renderTxnTable(list, compact) {
     </tr>`;
   }).join('');
 
+  const allChecked = list.length > 0 && list.every(t => selectedIds.has(t.id));
   return `<table class="txn-table">
     <thead><tr>
+      ${!compact?`<th style="width:36px;text-align:center;">
+        <input type="checkbox" id="check-all-txn"
+          style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
+          ${allChecked ? 'checked' : ''}
+          onchange="toggleAllSelect(this.checked)">
+      </th>`:''}
       <th>日付</th><th>カテゴリ</th><th>メモ</th><th>タグ</th>
       ${!compact?'<th>共通費</th>':''}
       <th style="text-align:right">金額</th>
@@ -1472,6 +1492,7 @@ function parseCSV(text, source) {
     return;
   }
 
+  window._importChecked = null; // 新しいCSVなので選択リセット
   renderImportPreview(preview);
 }
 
@@ -1687,9 +1708,15 @@ function guessCategory(desc) {
 
 function renderImportPreview(rows) {
   window._importRows = rows;
+  // デフォルトは全件選択
+  if (!window._importChecked) window._importChecked = new Set(rows.map((_,i)=>i));
   const expenseCount = rows.filter(r => r.isExpense !== false).length;
   const incomeCount  = rows.length - expenseCount;
-  const html = `
+
+  function buildHtml() {
+    const checked = window._importChecked;
+    const selectedCount = checked.size;
+    return `
     <div class="import-preview">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
         <p style="font-size:13px;font-weight:500;">
@@ -1697,11 +1724,26 @@ function renderImportPreview(rows) {
           <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
           <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
         </p>
-        <button class="btn btn-primary btn-sm" onclick="confirmImport()">インポート確定 (${rows.length}件)</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text3);">${selectedCount}件を選択中</span>
+          <button class="btn btn-sm" onclick="toggleAllImport(true)">全選択</button>
+          <button class="btn btn-sm" onclick="toggleAllImport(false)">全解除</button>
+          <button class="btn btn-primary btn-sm" onclick="confirmImport()" ${selectedCount===0?'disabled':''}>
+            インポート確定 (${selectedCount}件)
+          </button>
+        </div>
       </div>
       <div class="preview-table-wrap">
         <table class="preview-table">
-          <thead><tr><th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th></tr></thead>
+          <thead><tr>
+            <th style="width:36px;text-align:center;">
+              <input type="checkbox" id="import-check-all"
+                style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
+                ${checked.size === rows.length ? 'checked' : ''}
+                onchange="toggleAllImport(this.checked)">
+            </th>
+            <th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th>
+          </tr></thead>
           <tbody>
             ${rows.map((r,i) => {
               const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
@@ -1712,15 +1754,22 @@ function renderImportPreview(rows) {
               const catOptions  = isIncome
                 ? '<option value="収入" selected>収入</option>'
                 : categories.map(c=>`<option value="${c.name}" ${c.name===r.category?'selected':''}>${c.name}</option>`).join('');
+              const isChecked = checked.has(i);
               return `
-              <tr style="${isIncome ? 'background:var(--accent-bg);' : ''}">
+              <tr style="${!isChecked ? 'opacity:0.4;' : isIncome ? 'background:var(--accent-bg);' : ''}">
+                <td style="text-align:center;">
+                  <input type="checkbox" data-import-i="${i}"
+                    style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
+                    ${isChecked ? 'checked' : ''}
+                    onchange="toggleImportRow(${i}, this.checked)">
+                </td>
                 <td>
                   <span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;${isIncome?'background:var(--accent);color:#fff;':'background:var(--red-bg);color:var(--red);'}">
                     ${isIncome ? '収入' : '支出'}
                   </span>
                 </td>
                 <td>${r.date}</td>
-                <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.memo}">${r.memo}</td>
+                <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.memo}">${r.memo}</td>
                 <td style="${amtColor}">${isIncome?'+':''}¥${r.amount.toLocaleString()}</td>
                 <td>
                   <select class="preview-table" data-i="${i}" data-field="category" onchange="updateImportRow(this)" ${isIncome?'disabled':''}>
@@ -1738,7 +1787,27 @@ function renderImportPreview(rows) {
         </table>
       </div>
     </div>`;
-  document.getElementById('import-preview').innerHTML = html;
+  }
+
+  document.getElementById('import-preview').innerHTML = buildHtml();
+
+  // グローバルに再描画関数を保持
+  window._rebuildImportPreview = buildHtml;
+}
+
+function toggleImportRow(i, checked) {
+  if (checked) window._importChecked.add(i);
+  else window._importChecked.delete(i);
+  document.getElementById('import-preview').innerHTML = window._rebuildImportPreview();
+}
+
+function toggleAllImport(checked) {
+  if (checked) {
+    window._importChecked = new Set(window._importRows.map((_,i)=>i));
+  } else {
+    window._importChecked = new Set();
+  }
+  document.getElementById('import-preview').innerHTML = window._rebuildImportPreview();
 }
 
 function updateImportRow(sel) {
@@ -1750,7 +1819,11 @@ function updateImportRow(sel) {
 }
 
 function confirmImport() {
-  const rows = window._importRows || [];
+  const allRows = window._importRows || [];
+  const checked = window._importChecked || new Set(allRows.map((_,i)=>i));
+  // チェックされた行だけ取り込む
+  const rows = allRows.filter((_,i) => checked.has(i));
+  if (!rows.length) { alert('インポートする明細を選択してください'); return; }
   const newTxns = rows.map(r => {
     const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
     return {
@@ -1767,12 +1840,16 @@ function confirmImport() {
   });
   transactions.push(...newTxns);
   saveData(transactions);
+  // 状態リセット
+  window._importChecked = null;
   const expCnt = newTxns.filter(t=>t.type==='expense').length;
   const incCnt = newTxns.filter(t=>t.type==='income').length;
+  const skipCnt = allRows.length - rows.length;
   document.getElementById('import-preview').innerHTML = `
-    <p style="color:var(--accent);font-size:13px;margin-top:12px;">
+    <div style="padding:12px;background:var(--accent-bg);border-radius:8px;font-size:13px;color:var(--accent);margin-top:12px;">
       ✓ インポート完了：支出 ${expCnt}件、収入 ${incCnt}件
-    </p>`;
+      ${skipCnt > 0 ? `<span style="color:var(--text3);margin-left:8px;">${skipCnt}件をスキップ</span>` : ''}
+    </div>`;
   renderAll();
 }
 
@@ -1956,6 +2033,7 @@ function showPage(name, mobileBtn) {
   if (name==='dashboard') renderDashboard();
   if (name==='transactions') renderTransactions();
   if (name==='settings') renderCategories();
+  if (name !== 'transactions') { selectedIds.clear(); updateBulkBar(); }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -2130,13 +2208,80 @@ function initAuth() {
   }
 }
 
-// ── Event delegation for edit/delete buttons ──
+
+// ═══════════════════════════════════════════════════
+// BULK SELECT (明細一覧)
+// ═══════════════════════════════════════════════════
+let selectedIds = new Set();
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-delete-bar');
+  const cnt = document.getElementById('bulk-count');
+  if (!bar) return;
+  if (selectedIds.size > 0) {
+    bar.style.display = 'flex';
+    cnt.textContent = `${selectedIds.size}件を選択中`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function toggleAllSelect(checked) {
+  const cbs = document.querySelectorAll('.bulk-cb');
+  cbs.forEach(cb => {
+    cb.checked = checked;
+    const id = decodeURIComponent(cb.dataset.id || '');
+    if (checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+  });
+  const headerCb = document.getElementById('check-all-txn');
+  if (headerCb) { headerCb.checked = checked; headerCb.indeterminate = false; }
+  updateBulkBar();
+}
+
+function clearBulkSelect() {
+  selectedIds.clear();
+  updateBulkBar();
+  renderTransactions();
+}
+
+function bulkDelete() {
+  if (!selectedIds.size) return;
+  if (!confirm(`選択した ${selectedIds.size}件 を削除しますか？この操作は取り消せません。`)) return;
+  transactions = transactions.filter(t => !selectedIds.has(t.id));
+  selectedIds.clear();
+  saveData(transactions);
+  updateBulkBar();
+  renderAll();
+}
+
+// ── Event delegation ──
 document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-action]');
+  const btn = e.target.closest('[data-action="edit"],[data-action="delete"]');
   if (!btn) return;
-  const id = decodeURIComponent(btn.dataset.id);
+  const id = decodeURIComponent(btn.dataset.id || '');
   if (btn.dataset.action === 'delete') deleteTransaction(id);
   if (btn.dataset.action === 'edit')   editTransaction(id);
+});
+
+// チェックボックスの変更（一括選択）
+document.addEventListener('change', e => {
+  const cb = e.target;
+  if (!cb.classList.contains('bulk-cb')) return;
+  const id = decodeURIComponent(cb.dataset.id || '');
+  if (!id) return;
+  if (cb.checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  // ヘッダーチェックボックスの状態を更新
+  const allCbs = document.querySelectorAll('.bulk-cb');
+  const headerCb = document.getElementById('check-all-txn');
+  if (headerCb) {
+    const allChecked = [...allCbs].every(c => c.checked);
+    const anyChecked = [...allCbs].some(c => c.checked);
+    headerCb.checked = allChecked;
+    headerCb.indeterminate = anyChecked && !allChecked;
+  }
+  updateBulkBar();
 });
 
 // ── Init ──
