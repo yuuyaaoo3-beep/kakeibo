@@ -1687,28 +1687,53 @@ function guessCategory(desc) {
 
 function renderImportPreview(rows) {
   window._importRows = rows;
+  const expenseCount = rows.filter(r => r.isExpense !== false).length;
+  const incomeCount  = rows.length - expenseCount;
   const html = `
     <div class="import-preview">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <p style="font-size:13px;font-weight:500;">${rows.length}件を検出しました。カテゴリを確認して「インポート」してください。</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <p style="font-size:13px;font-weight:500;">
+          ${rows.length}件を検出
+          <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
+          <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
+        </p>
         <button class="btn btn-primary btn-sm" onclick="confirmImport()">インポート確定 (${rows.length}件)</button>
       </div>
       <div class="preview-table-wrap">
         <table class="preview-table">
-          <thead><tr><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th></tr></thead>
+          <thead><tr><th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th></tr></thead>
           <tbody>
-            ${rows.map((r,i)=>`
-              <tr>
+            ${rows.map((r,i) => {
+              const isIncome = r.isExpense === false;
+              const amtColor = isIncome ? 'color:var(--accent);font-weight:500;' : '';
+              const expenseTags = ['毎月・固定','毎月・変動','不定・固定','不定・変動','投資'];
+              const incomeTags  = ['収入・予算内','収入・予算外'];
+              const tagOptions  = isIncome ? incomeTags : expenseTags;
+              const catOptions  = isIncome
+                ? '<option value="収入" selected>収入</option>'
+                : categories.map(c=>`<option value="${c.name}" ${c.name===r.category?'selected':''}>${c.name}</option>`).join('');
+              return `
+              <tr style="${isIncome ? 'background:var(--accent-bg);' : ''}">
+                <td>
+                  <span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;${isIncome?'background:var(--accent);color:#fff;':'background:var(--red-bg);color:var(--red);'}">
+                    ${isIncome ? '収入' : '支出'}
+                  </span>
+                </td>
                 <td>${r.date}</td>
-                <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.memo}">${r.memo}</td>
-                <td>¥${r.amount.toLocaleString()}</td>
-                <td><select class="preview-table" data-i="${i}" data-field="category" onchange="updateImportRow(this)">
-                  ${categories.map(c=>`<option value="${c.name}" ${c.name===r.category?'selected':''}>${c.name}</option>`).join('')}
-                </select></td>
-                <td><select class="preview-table" data-i="${i}" data-field="tag" onchange="updateImportRow(this)">
-                  ${['毎月・固定','毎月・変動','不定・固定','不定・変動','投資'].map(t=>`<option ${t===r.tag?'selected':''}>${t}</option>`).join('')}
-                </select></td>
-              </tr>`).join('')}
+                <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.memo}">${r.memo}</td>
+                <td style="${amtColor}">${isIncome?'+':''}¥${r.amount.toLocaleString()}</td>
+                <td>
+                  <select class="preview-table" data-i="${i}" data-field="category" onchange="updateImportRow(this)" ${isIncome?'disabled':''}>
+                    ${catOptions}
+                  </select>
+                </td>
+                <td>
+                  <select class="preview-table" data-i="${i}" data-field="tag" onchange="updateImportRow(this)">
+                    ${tagOptions.map(t=>`<option ${t===r.tag?'selected':''}>${t}</option>`).join('')}
+                  </select>
+                </td>
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -1724,20 +1749,28 @@ function updateImportRow(sel) {
 
 function confirmImport() {
   const rows = window._importRows || [];
-  const newTxns = rows.map(r => ({
-    id: crypto.randomUUID(),
-    date: r.date,
-    type: 'expense',
-    amount: r.amount,
-    category: r.category,
-    tag: r.tag,
-    memo: r.memo,
-    shared: false,
-    source: 'csv'
-  }));
+  const newTxns = rows.map(r => {
+    const isIncome = r.isExpense === false;
+    return {
+      id: crypto.randomUUID(),
+      date: r.date,
+      type: isIncome ? 'income' : 'expense',
+      amount: r.amount,
+      category: isIncome ? '収入' : r.category,
+      tag: r.tag,
+      memo: r.memo,
+      shared: false,
+      source: 'csv'
+    };
+  });
   transactions.push(...newTxns);
   saveData(transactions);
-  document.getElementById('import-preview').innerHTML = `<p style="color:var(--accent);font-size:13px;margin-top:12px;">✓ ${newTxns.length}件をインポートしました</p>`;
+  const expCnt = newTxns.filter(t=>t.type==='expense').length;
+  const incCnt = newTxns.filter(t=>t.type==='income').length;
+  document.getElementById('import-preview').innerHTML = `
+    <p style="color:var(--accent);font-size:13px;margin-top:12px;">
+      ✓ インポート完了：支出 ${expCnt}件、収入 ${incCnt}件
+    </p>`;
   renderAll();
 }
 
