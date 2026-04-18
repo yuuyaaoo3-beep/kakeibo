@@ -642,6 +642,16 @@ body {
 <!-- ══════════════════════════════════════════════════ -->
 <section id="page-dashboard" class="page active">
 
+  <!-- ダッシュボード ビュー切替 -->
+  <div style="display:flex;gap:4px;background:var(--bg2);border-radius:10px;padding:4px;margin-bottom:20px;width:fit-content;">
+    <button class="nav-tab active" id="view-tab-personal" onclick="setDashboardView('personal',this)" style="padding:6px 20px;font-size:13px;">個人</button>
+    <button class="nav-tab" id="view-tab-shared" onclick="setDashboardView('shared',this)" style="padding:6px 20px;font-size:13px;">共通</button>
+    <button class="nav-tab" id="view-tab-balance" onclick="setDashboardView('balance',this)" style="padding:6px 20px;font-size:13px;">入金管理</button>
+  </div>
+
+  <!-- 個人ビュー -->
+  <div id="view-personal">
+
   <!-- Period bar -->
   <div class="period-bar">
     <div class="period-type-tabs">
@@ -711,6 +721,64 @@ body {
     </div>
     <div id="dashboard-txn-list"></div>
   </div>
+
+  </div><!-- /view-personal -->
+
+  <!-- 共通ビュー -->
+  <div id="view-shared" style="display:none;">
+    <div class="period-bar">
+      <div class="period-type-tabs">
+        <button class="period-type-tab active" onclick="setSharedPeriodType('month',this)">月別</button>
+        <button class="period-type-tab" onclick="setSharedPeriodType('year',this)">年別</button>
+      </div>
+      <div class="period-nav" id="shared-period-nav">
+        <button onclick="shiftSharedPeriod(-1)">‹</button>
+        <span class="period-label" id="shared-period-label">-</span>
+        <button onclick="shiftSharedPeriod(1)">›</button>
+      </div>
+    </div>
+    <div class="summary-grid" id="shared-summary-grid" style="margin-bottom:20px;"></div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-header"><span class="card-title">共通支出 カテゴリ別</span></div>
+        <div class="chart-wrap"><canvas id="chart-shared-donut" aria-label="共通支出円グラフ" role="img"></canvas></div>
+        <div id="shared-donut-legend" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">共通支出 月別推移</span></div>
+        <div class="chart-wrap"><canvas id="chart-shared-bar" aria-label="共通支出棒グラフ" role="img"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header"><span class="card-title">共通支出 明細</span></div>
+      <div id="shared-txn-list"></div>
+    </div>
+  </div><!-- /view-shared -->
+
+  <!-- 入金管理ビュー -->
+  <div id="view-balance" style="display:none;">
+    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <p style="font-size:13px;color:var(--text2);">共通口座への入金累計と不足額を管理します。住信SBI の CSV をインポートすると自動で集計されます。</p>
+      <button class="btn btn-sm btn-primary" onclick="openAddBalanceModal()">＋ 入金を手動追加</button>
+    </div>
+
+    <!-- 累計カード -->
+    <div class="summary-grid" id="balance-summary-grid" style="margin-bottom:20px;"></div>
+
+    <!-- 入金履歴テーブル -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">入金履歴</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" id="balance-filter-all" onclick="setBalanceFilter('all',this)" style="font-size:12px;">全員</button>
+          <button class="btn btn-sm" id="balance-filter-yuuya" onclick="setBalanceFilter('ゆうや',this)" style="font-size:12px;">ゆうや</button>
+          <button class="btn btn-sm" id="balance-filter-mayo" onclick="setBalanceFilter('まよ',this)" style="font-size:12px;">まよ</button>
+        </div>
+      </div>
+      <div id="balance-txn-list"></div>
+    </div>
+  </div><!-- /view-balance -->
+
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -767,14 +835,18 @@ body {
         <div>
           <label class="form-label">取込元を選択</label>
           <select class="form-control" id="csv-source" onchange="onSourceChange()">
-            <optgroup label="銀行">
-              <option value="rakuten_bank">楽天銀行</option>
-              <option value="mizuho">みずほ銀行</option>
-              <option value="sbi">住信SBIネット銀行</option>
+            <optgroup label="個人口座">
+              <option value="rakuten_bank">楽天銀行（個人）</option>
+              <option value="mizuho">みずほ銀行（個人）</option>
             </optgroup>
-            <optgroup label="クレジットカード">
-              <option value="rakuten_card">楽天カード</option>
-              <option value="olive">Olive（三井住友）</option>
+            <optgroup label="共通口座">
+              <option value="sbi_shared">住信SBIネット銀行（共通）</option>
+            </optgroup>
+            <optgroup label="個人カード">
+              <option value="rakuten_card">楽天カード（個人）</option>
+            </optgroup>
+            <optgroup label="共通カード">
+              <option value="olive">Olive（共通・三井住友）</option>
             </optgroup>
             <optgroup label="電子マネー">
               <option value="paypay_csv">PayPay</option>
@@ -969,6 +1041,39 @@ https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-add')">キャンセル</button>
       <button class="btn btn-primary" onclick="saveTransaction()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BALANCE MODAL -->
+<div class="modal-overlay" id="modal-add-balance">
+  <div class="modal">
+    <h3 class="modal-title">入金を追加</h3>
+    <input type="hidden" id="balance-edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">日付</label>
+        <input type="date" class="form-control" id="balance-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">入金者</label>
+        <select class="form-control" id="balance-payer">
+          <option value="ゆうや">ゆうや</option>
+          <option value="まよ">まよ</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">金額（円）</label>
+      <input type="number" class="form-control" id="balance-amount" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <input type="text" class="form-control" id="balance-memo" placeholder="例：4月分入金">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-add-balance')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveBalanceEntry()">保存</button>
     </div>
   </div>
 </div>
@@ -1528,8 +1633,12 @@ function parseCSV(text, source) {
     preview = parseRakutenCard(rows);
   } else if (source === 'olive') {
     preview = parseOlive(rows);
+  } else if (source === 'sbi_shared') {
+    // 共通口座：SBIパーサーを使い、収入行に入金者選択を追加
+    preview = parseSBI(rows);
+    preview = preview.map(r => ({ ...r, source: 'sbi_shared' }));
   } else if (source === 'paypay_csv') {
-    parsePayPayCSV(text); // 専用パーサーを呼び出して終了
+    parsePayPayCSV(text);
     return;
   }
 
@@ -1763,10 +1872,36 @@ function guessCategory(desc) {
   return 'その他';
 }
 
+// 重複チェック用のキーを生成（日付 + 金額 + メモ の組み合わせ）
+function dupKey(r) {
+  return `${r.date}|${r.amount}|${(r.memo||'').trim()}`;
+}
+
 function renderImportPreview(rows) {
   window._importRows = rows;
-  // デフォルトは全件選択
-  if (!window._importChecked) window._importChecked = new Set(rows.map((_,i)=>i));
+
+  // ── 重複検出 ──
+  // 既存データのキーセットを作成
+  const existingKeys = new Set(transactions.map(t => dupKey(t)));
+  // 今回のインポート内での重複キーも検出（同一バッチ内重複）
+  const batchKeys = new Set();
+  const dupIndices = new Set();
+  rows.forEach((r, i) => {
+    const k = dupKey(r);
+    if (existingKeys.has(k) || batchKeys.has(k)) {
+      dupIndices.add(i); // 重複としてマーク
+    } else {
+      batchKeys.add(k);
+    }
+  });
+
+  // デフォルト：重複はチェックOFF、それ以外はON
+  if (!window._importChecked) {
+    window._importChecked = new Set(
+      rows.map((_,i) => i).filter(i => !dupIndices.has(i))
+    );
+  }
+  const dupCount = dupIndices.size;
   const expenseCount = rows.filter(r => r.isExpense !== false).length;
   const incomeCount  = rows.length - expenseCount;
 
@@ -1780,6 +1915,7 @@ function renderImportPreview(rows) {
           ${rows.length}件を検出
           <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
           <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
+          ${dupCount > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 重複 ${dupCount}件（自動チェックOFF）</span>` : ''}
         </p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">${selectedCount}件を選択中</span>
@@ -1799,11 +1935,12 @@ function renderImportPreview(rows) {
                 ${checked.size === rows.length ? 'checked' : ''}
                 onchange="toggleAllImport(this.checked)">
             </th>
-            <th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th>
+            <th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th><th>入金者</th>
           </tr></thead>
           <tbody>
             ${rows.map((r,i) => {
               const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
+              const isDup = dupIndices.has(i);
               const amtColor = isIncome ? 'color:var(--accent);font-weight:500;' : '';
               const expenseTags = ['毎月・固定','毎月・変動','不定・固定','不定・変動','投資'];
               const incomeTags  = ['収入・予算内','収入・予算外'];
@@ -1812,8 +1949,13 @@ function renderImportPreview(rows) {
                 ? '<option value="収入" selected>収入</option>'
                 : categories.map(c=>`<option value="${c.name}" ${c.name===r.category?'selected':''}>${c.name}</option>`).join('');
               const isChecked = checked.has(i);
+              const rowBg = !isChecked
+                ? 'opacity:0.35;'
+                : isIncome
+                  ? 'background:var(--accent-bg);'
+                  : isDup ? 'background:var(--amber-bg);' : '';
               return `
-              <tr style="${!isChecked ? 'opacity:0.4;' : isIncome ? 'background:var(--accent-bg);' : ''}">
+              <tr style="${rowBg}">
                 <td style="text-align:center;">
                   <input type="checkbox" data-import-i="${i}"
                     style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
@@ -1821,9 +1963,12 @@ function renderImportPreview(rows) {
                     onchange="toggleImportRow(${i}, this.checked)">
                 </td>
                 <td>
-                  <span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;${isIncome?'background:var(--accent);color:#fff;':'background:var(--red-bg);color:var(--red);'}">
-                    ${isIncome ? '収入' : '支出'}
-                  </span>
+                  <div style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;${isIncome?'background:var(--accent);color:#fff;':'background:var(--red-bg);color:var(--red);'}">
+                      ${isIncome ? '収入' : '支出'}
+                    </span>
+                    ${isDup ? '<span style="font-size:10px;color:var(--amber);font-weight:500;">重複</span>' : ''}
+                  </div>
                 </td>
                 <td>${r.date}</td>
                 <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.memo}">${r.memo}</td>
@@ -1838,6 +1983,13 @@ function renderImportPreview(rows) {
                     ${tagOptions.map(t=>`<option ${t===r.tag?'selected':''}>${t}</option>`).join('')}
                   </select>
                 </td>
+                ${isIncome && r.source === 'sbi_shared' ? `<td>
+                  <select class="preview-table" data-i="${i}" data-field="payer" onchange="updateImportRow(this)" style="min-width:72px;">
+                    <option value="">選択</option>
+                    <option value="ゆうや" ${r.payer==='ゆうや'?'selected':''}>ゆうや</option>
+                    <option value="まよ" ${r.payer==='まよ'?'selected':''}>まよ</option>
+                  </select>
+                </td>` : '<td></td>'}
               </tr>`;
             }).join('')}
           </tbody>
@@ -1878,11 +2030,14 @@ function updateImportRow(sel) {
 function confirmImport() {
   const allRows = window._importRows || [];
   const checked = window._importChecked || new Set(allRows.map((_,i)=>i));
-  // チェックされた行だけ取り込む
   const rows = allRows.filter((_,i) => checked.has(i));
   if (!rows.length) { alert('インポートする明細を選択してください'); return; }
   const newTxns = rows.map(r => {
     const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
+    // 共通費フラグ：SBIの支出・Oliveは自動ON
+    const autoShared = r.source === 'sbi_shared' || r.source === 'olive';
+    // 入金者（SBI共通口座の収入行のみ）
+    const payer = r.payer || null;
     return {
       id: crypto.randomUUID(),
       date: r.date,
@@ -1891,8 +2046,9 @@ function confirmImport() {
       category: isIncome ? '収入' : r.category,
       tag: r.tag,
       memo: r.memo,
-      shared: false,
-      source: 'csv'
+      shared: autoShared && !isIncome,
+      payer: isIncome ? payer : null,
+      source: r.source || 'csv'
     };
   });
   transactions.push(...newTxns);
@@ -2381,11 +2537,15 @@ async function loadFromDrive() {
       const data = await fileRes.json();
       if (data.transactions) {
         transactions = data.transactions;
-        saveData(transactions); // ローカルにもキャッシュ
+        saveData(transactions);
       }
       if (data.categories && data.categories.length) {
         categories = data.categories;
         saveCategories(categories);
+      }
+      if (data.balanceEntries) {
+        balanceEntries = data.balanceEntries;
+        saveBalanceData(balanceEntries);
       }
       renderAll();
     } else {
@@ -2403,7 +2563,7 @@ async function saveToDrive() {
   if (!gAccessToken) return; // 未ログインなら何もしない
   setSyncState('syncing', '同期中…');
   try {
-    const payload = JSON.stringify({ transactions, categories, updatedAt: new Date().toISOString() });
+    const payload = JSON.stringify({ transactions, categories, balanceEntries, updatedAt: new Date().toISOString() });
     const blob = new Blob([payload], { type: 'application/json' });
 
     if (gFileId) {
@@ -2508,11 +2668,17 @@ function bulkDelete() {
 
 // ── Event delegation ──
 document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-action="edit"],[data-action="delete"]');
+  const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const id = decodeURIComponent(btn.dataset.id || '');
   if (btn.dataset.action === 'delete') deleteTransaction(id);
   if (btn.dataset.action === 'edit')   editTransaction(id);
+  if (btn.dataset.action === 'delete-balance') {
+    if (!confirm('この入金記録を削除しますか？')) return;
+    balanceEntries = balanceEntries.filter(e => e.id !== id);
+    saveBalanceData(balanceEntries);
+    renderBalanceDashboard();
+  }
 });
 
 // チェックボックスの変更（一括選択）
@@ -2536,6 +2702,280 @@ document.addEventListener('change', e => {
 });
 
 
+
+// ═══════════════════════════════════════════════════
+// フェーズ2：ダッシュボードビュー切替・共通・入金管理
+// ═══════════════════════════════════════════════════
+let dashboardView = 'personal'; // personal | shared | balance
+let sharedPeriodType = 'month';
+let sharedDate = new Date();
+let balanceFilter = 'all';
+let sharedDonutChart = null, sharedBarChart = null;
+
+// ─── ストレージキー ───
+const BALANCE_KEY = 'kakeibo_balance_v1';
+
+function loadBalanceData() {
+  try { return JSON.parse(localStorage.getItem(BALANCE_KEY)) || []; }
+  catch { return []; }
+}
+function saveBalanceData(d) {
+  localStorage.setItem(BALANCE_KEY, JSON.stringify(d));
+  scheduleSync();
+}
+let balanceEntries = loadBalanceData();
+
+// ─── ビュー切替 ───
+function setDashboardView(view, btn) {
+  dashboardView = view;
+  document.querySelectorAll('#view-tab-personal,#view-tab-shared,#view-tab-balance')
+    .forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-personal').style.display = view === 'personal' ? 'block' : 'none';
+  document.getElementById('view-shared').style.display   = view === 'shared'   ? 'block' : 'none';
+  document.getElementById('view-balance').style.display  = view === 'balance'  ? 'block' : 'none';
+  if (view === 'shared')   renderSharedDashboard();
+  if (view === 'balance')  renderBalanceDashboard();
+}
+
+// ─── 共通出費ダッシュボード ───
+function setSharedPeriodType(type, btn) {
+  sharedPeriodType = type;
+  document.querySelectorAll('#view-shared .period-type-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSharedDashboard();
+}
+function shiftSharedPeriod(d) {
+  sharedDate = new Date(sharedDate.getFullYear(), sharedDate.getMonth()+d, 1);
+  renderSharedDashboard();
+}
+
+function getSharedFiltered() {
+  // 共通費フラグONの支出のみ（100%の金額で表示）
+  const all = transactions.filter(t => t.type === 'expense' && t.shared);
+  const y = sharedDate.getFullYear(), m = sharedDate.getMonth();
+  if (sharedPeriodType === 'month') {
+    return all.filter(t => { const d=new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
+  }
+  return all.filter(t => new Date(t.date).getFullYear() === y);
+}
+
+function renderSharedDashboard() {
+  // 期間ラベル更新
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const y = sharedDate.getFullYear(), m = sharedDate.getMonth();
+  document.getElementById('shared-period-label').textContent =
+    sharedPeriodType === 'month' ? `${y}年 ${months[m]}` : `${y}年`;
+
+  const filtered = getSharedFiltered();
+  const total = filtered.reduce((s,t) => s + t.amount, 0);
+  const myShare = Math.round(total / 2);
+
+  // サマリー
+  document.getElementById('shared-summary-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">共通支出 合計</div>
+      <div class="stat-value red">¥${Math.round(total).toLocaleString()}</div>
+      <div class="stat-sub">2人で使った総額</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">1人あたり負担</div>
+      <div class="stat-value">¥${myShare.toLocaleString()}</div>
+      <div class="stat-sub">折半の場合</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">件数</div>
+      <div class="stat-value">${filtered.length}</div>
+      <div class="stat-sub">共通費レコード数</div>
+    </div>`;
+
+  // 円グラフ
+  const byCategory = {};
+  filtered.forEach(t => { byCategory[t.category||'その他'] = (byCategory[t.category||'その他']||0) + t.amount; });
+  const labels = Object.keys(byCategory);
+  const data   = Object.values(byCategory);
+  const colors = labels.map(l => getCatColor(l));
+
+  if (sharedDonutChart) sharedDonutChart.destroy();
+  const ctx = document.getElementById('chart-shared-donut').getContext('2d');
+  sharedDonutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ¥${Math.round(ctx.parsed).toLocaleString()}` } } },
+      onClick: (_, els) => { if (els.length) openSharedCategoryDetail(labels[els[0].index], filtered); }
+    }
+  });
+  document.getElementById('shared-donut-legend').innerHTML = labels.map((l,i) => `
+    <span style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;" onclick="openSharedCategoryDetail('${l}', null)">
+      <span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0;"></span>${l}
+    </span>`).join('');
+
+  // 棒グラフ（月別）
+  const now = new Date();
+  const barLabels = [], barData = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    barLabels.push(`${d.getMonth()+1}月`);
+    const total = transactions
+      .filter(t => { const td=new Date(t.date); return t.type==='expense' && t.shared && td.getFullYear()===d.getFullYear() && td.getMonth()===d.getMonth(); })
+      .reduce((s,t) => s+t.amount, 0);
+    barData.push(Math.round(total));
+  }
+  if (sharedBarChart) sharedBarChart.destroy();
+  const ctx2 = document.getElementById('chart-shared-bar').getContext('2d');
+  sharedBarChart = new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: barLabels, datasets: [{ label: '共通支出', data: barData, backgroundColor: barData.map((_,i)=>i===11?'#8b5cf6':'#ddd6fe'), borderRadius: 4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ¥${ctx.parsed.y.toLocaleString()}` } } },
+      scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v>=10000?`¥${(v/10000).toFixed(0)}万`:`¥${v.toLocaleString()}` } } }
+    }
+  });
+
+  // 明細一覧
+  const sorted = [...filtered].sort((a,b) => new Date(b.date)-new Date(a.date));
+  document.getElementById('shared-txn-list').innerHTML = sorted.length ? `
+    <table class="txn-table">
+      <thead><tr><th>日付</th><th>カテゴリ</th><th>メモ</th><th>タグ</th><th style="text-align:right">総額</th><th style="text-align:right">1人分</th></tr></thead>
+      <tbody>${sorted.map(t => `
+        <tr>
+          <td><span class="txn-date">${t.date}</span></td>
+          <td><span class="cat-dot" style="background:${getCatColor(t.category)}"></span>${t.category||''}</td>
+          <td>${(t.memo||'').replace(/</g,'&lt;')}</td>
+          <td><span class="badge badge-${tagClass(t.tag)}">${t.tag||''}</span></td>
+          <td class="txn-amount expense">¥${t.amount.toLocaleString()}</td>
+          <td class="txn-amount" style="color:var(--text2);">¥${Math.round(t.amount/2).toLocaleString()}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="empty-state"><div class="empty-icon">📭</div><p>共通費データがありません<br>支出追加時に「共通費」フラグをONにするか、住信SBI・OliveのCSVをインポートしてください</p></div>`;
+}
+
+function openSharedCategoryDetail(catName, filtered) {
+  if (!filtered) filtered = getSharedFiltered();
+  const list = filtered.filter(t => t.category === catName).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const total = list.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('detail-dot').style.background = getCatColor(catName);
+  document.getElementById('detail-title').textContent = `共通・${catName}`;
+  document.getElementById('detail-total').textContent = `¥${Math.round(total).toLocaleString()}`;
+  document.getElementById('detail-list').innerHTML = list.length ? `
+    <table class="txn-table">
+      <thead><tr><th>日付</th><th>メモ</th><th style="text-align:right">総額</th><th style="text-align:right">1人分</th></tr></thead>
+      <tbody>${list.map(t=>`
+        <tr>
+          <td><span class="txn-date">${t.date}</span></td>
+          <td>${t.memo||''}</td>
+          <td class="txn-amount expense">¥${t.amount.toLocaleString()}</td>
+          <td style="text-align:right;font-size:12px;color:var(--text3);">¥${Math.round(t.amount/2).toLocaleString()}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="empty-state"><p>データなし</p></div>`;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+// ─── 入金管理ダッシュボード ───
+function setBalanceFilter(filter, btn) {
+  balanceFilter = filter;
+  document.querySelectorAll('#view-balance .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBalanceDashboard();
+}
+
+function renderBalanceDashboard() {
+  // 全入金を集計（手動追加 + CSVインポートでpayerが付いた収入）
+  const allPayments = [
+    ...balanceEntries,
+    ...transactions.filter(t => t.type === 'income' && t.payer && t.source === 'sbi_shared')
+      .map(t => ({ id: t.id, date: t.date, payer: t.payer, amount: t.amount, memo: t.memo, source: 'csv' }))
+  ];
+
+  const yuuyaTotal = allPayments.filter(e => e.payer === 'ゆうや').reduce((s,e) => s+e.amount, 0);
+  const mayoTotal  = allPayments.filter(e => e.payer === 'まよ').reduce((s,e) => s+e.amount, 0);
+  const grandTotal = yuuyaTotal + mayoTotal;
+  const diff = yuuyaTotal - mayoTotal;
+  const diffAbs = Math.abs(diff);
+  const behindPerson = diff > 0 ? 'まよ' : diff < 0 ? 'ゆうや' : null;
+
+  document.getElementById('balance-summary-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">ゆうやの入金累計</div>
+      <div class="stat-value green">¥${yuuyaTotal.toLocaleString()}</div>
+      <div class="stat-sub">${allPayments.filter(e=>e.payer==='ゆうや').length}件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">まよの入金累計</div>
+      <div class="stat-value green">¥${mayoTotal.toLocaleString()}</div>
+      <div class="stat-sub">${allPayments.filter(e=>e.payer==='まよ').length}件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">合計入金額</div>
+      <div class="stat-value">¥${grandTotal.toLocaleString()}</div>
+      <div class="stat-sub">2人の合計</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">平等にするための不足</div>
+      <div class="stat-value ${diffAbs > 0 ? 'red' : 'green'}">
+        ${diffAbs > 0 ? `¥${diffAbs.toLocaleString()}` : '均等'}
+      </div>
+      <div class="stat-sub">${behindPerson ? `${behindPerson}が不足` : '2人の入金は均等です'}</div>
+    </div>`;
+
+  // 入金履歴テーブル
+  let filtered = [...allPayments].sort((a,b) => new Date(b.date)-new Date(a.date));
+  if (balanceFilter !== 'all') filtered = filtered.filter(e => e.payer === balanceFilter);
+
+  document.getElementById('balance-txn-list').innerHTML = filtered.length ? `
+    <table class="txn-table">
+      <thead><tr><th>日付</th><th>入金者</th><th>メモ</th><th>出所</th><th style="text-align:right">金額</th><th></th></tr></thead>
+      <tbody>${filtered.map(e => `
+        <tr>
+          <td><span class="txn-date">${e.date}</span></td>
+          <td>
+            <span style="display:inline-flex;align-items:center;justify-content:center;
+              width:52px;padding:2px 0;border-radius:100px;font-size:11px;font-weight:500;
+              background:${e.payer==='ゆうや'?'var(--blue-bg)':'var(--pink-bg,#fbeaf0)'};
+              color:${e.payer==='ゆうや'?'var(--blue)':'var(--purple)'};">
+              ${e.payer}
+            </span>
+          </td>
+          <td>${(e.memo||'').replace(/</g,'&lt;')}</td>
+          <td style="font-size:11px;color:var(--text3);">${e.source==='csv'?'CSV':'手動'}</td>
+          <td class="txn-amount income">+¥${e.amount.toLocaleString()}</td>
+          <td>${e.source!=='csv'?`<button class="btn btn-icon btn-sm btn-danger" data-action="delete-balance" data-id="${encodeURIComponent(e.id)}" title="削除">🗑</button>`:''}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="empty-state"><div class="empty-icon">💰</div><p>入金記録がありません<br>「＋ 入金を手動追加」または住信SBIのCSVをインポートしてください</p></div>`;
+}
+
+// ─── 入金追加・削除 ───
+function openAddBalanceModal() {
+  document.getElementById('balance-edit-id').value = '';
+  document.getElementById('balance-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('balance-amount').value = '';
+  document.getElementById('balance-memo').value = '';
+  document.getElementById('modal-add-balance').classList.add('open');
+}
+
+function saveBalanceEntry() {
+  const id     = document.getElementById('balance-edit-id').value;
+  const date   = document.getElementById('balance-date').value;
+  const payer  = document.getElementById('balance-payer').value;
+  const amount = parseInt(document.getElementById('balance-amount').value, 10);
+  const memo   = document.getElementById('balance-memo').value;
+  if (!date || isNaN(amount) || amount <= 0) { alert('日付と金額を正しく入力してください'); return; }
+  const entry = { id: id || crypto.randomUUID(), date, payer, amount, memo, source: 'manual' };
+  if (id) { const idx = balanceEntries.findIndex(e=>e.id===id); if(idx>=0) balanceEntries[idx]=entry; }
+  else balanceEntries.push(entry);
+  saveBalanceData(balanceEntries);
+  closeModal('modal-add-balance');
+  renderBalanceDashboard();
+}
+
+// ─── イベントデリゲーション：入金削除 ───
+
 function onSourceChange() {
   const src = document.getElementById('csv-source').value;
   const hint = document.getElementById('paypay-hint');
@@ -2549,6 +2989,7 @@ function onSourceChange() {
 }
 
 // ── Init ──
+balanceEntries = loadBalanceData();
 renderAll();
 initAuth();
 </script>
