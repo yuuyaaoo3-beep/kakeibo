@@ -1537,7 +1537,7 @@ function parseMizuho(rows) {
     } else if (!isNaN(inAmt) && inAmt > 0) {
       const cat2 = guessCategory(desc);
       const tag2 = (cat2 === 'その他') ? '収入・予算内' : categories.find(c=>c.name===cat2)?.defaultTag||'収入・予算内';
-      preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false });
+      preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
     }
   }
   return preview;
@@ -1577,7 +1577,7 @@ function parseRakutenBank(rows) {
       const cat = guessCategory(desc);
       preview.push({ date, memo: desc, amount: Math.abs(amt), category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else {
-      preview.push({ date, memo: desc, amount: amt, category: '収入', tag: '収入・予算内', isExpense: false });
+      preview.push({ date, memo: desc, amount: amt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
     }
   }
   return preview;
@@ -1610,7 +1610,7 @@ function parseSBI(rows) {
       const cat = guessCategory(desc);
       preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else if (!isNaN(inAmt) && inAmt > 0) {
-      preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false });
+      preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
     }
   }
   return preview;
@@ -1704,7 +1704,7 @@ function renderImportPreview(rows) {
           <thead><tr><th>種別</th><th>日付</th><th>メモ</th><th>金額</th><th>カテゴリ</th><th>タグ</th></tr></thead>
           <tbody>
             ${rows.map((r,i) => {
-              const isIncome = r.isExpense === false;
+              const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
               const amtColor = isIncome ? 'color:var(--accent);font-weight:500;' : '';
               const expenseTags = ['毎月・固定','毎月・変動','不定・固定','不定・変動','投資'];
               const incomeTags  = ['収入・予算内','収入・予算外'];
@@ -1744,13 +1744,15 @@ function renderImportPreview(rows) {
 function updateImportRow(sel) {
   const i = parseInt(sel.dataset.i);
   const field = sel.dataset.field;
+  // isExpense/type は UI から変更不可（パーサーの判定を維持）
+  if (field === 'isExpense' || field === 'type') return;
   window._importRows[i][field] = sel.value;
 }
 
 function confirmImport() {
   const rows = window._importRows || [];
   const newTxns = rows.map(r => {
-    const isIncome = r.isExpense === false;
+    const isIncome = (r.isExpense === false) || (r.type === 'income') || (r.category === '収入' && r.tag && r.tag.startsWith('収入'));
     return {
       id: crypto.randomUUID(),
       date: r.date,
