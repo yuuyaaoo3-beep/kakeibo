@@ -1713,20 +1713,39 @@ function handleCSV(input) {
   const file = input.files[0];
   if (!file) return;
   const source = document.getElementById('csv-source').value;
-  // まずUTF-8で試み、文字化けがあればShift-JISで再読み込み
-  const readerUtf = new FileReader();
-  readerUtf.onload = e => {
-    const text = e.target.result;
-    // 文字化け検出：UTF-8で読んで置換文字(U+FFFD)が多い場合はShift-JISで再試行
-    if ((text.match(/\uFFFD/g)||[]).length > 5) {
-      const readerSjis = new FileReader();
-      readerSjis.onload = ev => parseCSV(ev.target.result, source);
-      readerSjis.readAsText(file, 'Shift_JIS');
-    } else {
-      parseCSV(text, source);
-    }
-  };
-  readerUtf.readAsText(file, 'UTF-8');
+  // try-catchで全体をラップしてエラーを表示
+  try {
+    const readerUtf = new FileReader();
+    readerUtf.onerror = () => {
+      document.getElementById('import-preview').innerHTML =
+        '<p style="color:var(--red);padding:12px;">ファイル読み込みエラー</p>';
+    };
+    readerUtf.onload = e => {
+      try {
+        const text = e.target.result;
+        if ((text.match(/\uFFFD/g)||[]).length > 5) {
+          const readerSjis = new FileReader();
+          readerSjis.onload = ev => {
+            try { parseCSV(ev.target.result, source); }
+            catch(err) {
+              document.getElementById('import-preview').innerHTML =
+                `<p style="color:var(--red);padding:12px;">パースエラー: ${err.message}</p>`;
+            }
+          };
+          readerSjis.readAsText(file, 'Shift_JIS');
+        } else {
+          parseCSV(text, source);
+        }
+      } catch(err) {
+        document.getElementById('import-preview').innerHTML =
+          `<p style="color:var(--red);padding:12px;">エラー: ${err.message}</p>`;
+      }
+    };
+    readerUtf.readAsText(file, 'UTF-8');
+  } catch(err) {
+    document.getElementById('import-preview').innerHTML =
+      `<p style="color:var(--red);padding:12px;">エラー: ${err.message}</p>`;
+  }
   input.value = '';
 }
 
@@ -1746,7 +1765,7 @@ function splitCSVLine(line) {
 
 function parseCSV(text, source) {
   // インポート前に過去明細キャッシュを構築
-  buildMemoCategoryCache();
+  try { buildMemoCategoryCache(); } catch(e) { console.warn('cache build error:', e); }
   const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines = raw.split('\n');
   const rows = lines.map(l => splitCSVLine(l));
