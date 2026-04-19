@@ -2214,13 +2214,15 @@ function parsePayPayCSV(text) {
         isExpense: true, type: 'expense', source: 'paypay'
       });
     } else if (!isNaN(inAmt) && inAmt > 0) {
-      // チャージは収支カウントから除外すべきケースが多いが、
-      // ユーザーがプレビューで選択できるようにそのまま収入として表示
+      // チャージ・受け取りは isCharge: true を付与 → デフォルトチェックOFF
+      const isCharge = /チャージ|ポイント獲得|ポイント付与/.test(txType);
       preview.push({
         date, memo: txType || memo, amount: inAmt,
         category: '収入',
-        tag: '収入・予算内',
-        isExpense: false, type: 'income', source: 'paypay'
+        tag: isCharge ? '収入・予算外' : '収入・予算内',
+        isExpense: false, type: 'income',
+        isCharge,  // ← チャージはデフォルトOFF、受け取り等はON
+        source: 'paypay'
       });
     }
   }
