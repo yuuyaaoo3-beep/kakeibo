@@ -1383,7 +1383,7 @@ function renderTransactions() {
 // ソース名 → 表示ラベル変換
 function sourceLabel(t) {
   const map = {
-    manual:       { label: '手動', color: 'var(--bg3)', text: 'var(--text2)' },
+    manual:       { label: '現金', color: '#78716c', text: '#fff' },
     csv:          { label: 'CSV', color: 'var(--bg3)', text: 'var(--text2)' },
     rakuten_bank: { label: '楽天銀行', color: '#bf0000', text: '#fff' },
     mizuho:       { label: 'みずほ銀行', color: '#003087', text: '#fff' },
@@ -1672,9 +1672,7 @@ function parseCSV(text, source) {
   } else if (source === 'olive') {
     preview = parseOlive(rows);
   } else if (source === 'sbi_shared') {
-    // 共通口座：SBIパーサーを使い、収入行に入金者選択を追加
     preview = parseSBI(rows);
-    preview = preview.map(r => ({ ...r, source: 'sbi_shared' }));
   } else if (source === 'paypay_csv') {
     parsePayPayCSV(text);
     return;
@@ -1684,6 +1682,9 @@ function parseCSV(text, source) {
   if (!preview.length) {
     preview = parseGeneric(rows);
   }
+
+  // ── source を全行に一括付与（Oliveは自前でsourceを付けているので上書きしない）──
+  preview = preview.map(r => ({ ...r, source: r.source || source }));
 
   if (!preview.length) {
     document.getElementById('import-preview').innerHTML = `
