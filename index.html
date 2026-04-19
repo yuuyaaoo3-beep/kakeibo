@@ -1833,8 +1833,44 @@ function parseRakutenCard(rows) {
 // Olive（三井住友）
 // フォーマット: 取引日,摘要,出金額,入金額,残高
 function parseOlive(rows) {
-  // SBIと類似フォーマット
-  return parseSBI(rows);
+  // 三井住友Olive/カードのCSVフォーマット:
+  // 行0: 氏名,カード番号,カード名（ヘッダー情報行）
+  // データ行: 日付(0),店名(1),利用金額(2),分割回数(3),今回支払回数(4),今回請求金額(5),備考(6)
+  // マイナス金額 = 返品・キャンセル
+  const preview = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length < 6) continue;
+    // 日付列チェック（YYYY/MM/DD形式）
+    const rawDate = r[0];
+    if (!/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/.test(rawDate.trim())) continue;
+    const date = normalizeDate(rawDate.trim());
+    if (!date) continue;
+
+    const desc  = (r[1] || '').trim();
+    // 列5（今回請求金額）を使用 ← 列2（利用金額）ではなく
+    const rawAmt = (r[5] || r[2] || '').replace(/,/g,'').trim();
+    const amt = parseInt(rawAmt, 10);
+    if (isNaN(amt) || amt === 0) continue;
+
+    if (amt < 0) {
+      // マイナス = 返品・キャンセル → 収入扱い
+      preview.push({
+        date, memo: desc, amount: Math.abs(amt),
+        category: '収入', tag: '収入・予算外',
+        isExpense: false, type: 'income', source: 'olive'
+      });
+    } else {
+      const cat = guessCategory(desc);
+      preview.push({
+        date, memo: desc, amount: amt,
+        category: cat,
+        tag: categories.find(c=>c.name===cat)?.defaultTag || '毎月・変動',
+        isExpense: true, type: 'expense', source: 'olive'
+      });
+    }
+  }
+  return preview;
 }
 
 // ヒューリスティック汎用パーサー
@@ -1895,10 +1931,14 @@ function renderImportPreview(rows) {
     }
   });
 
-  // デフォルト：重複はチェックOFF、それ以外はON
+  // デフォルト：重複・チャージはチェックOFF、それ以外はON
+  // isCharge: true のPayPayチャージ行も自動でOFF
+  const chargeIndices = new Set(
+    rows.map((r,i) => r.isCharge === true ? i : -1).filter(i => i >= 0)
+  );
   if (!window._importChecked) {
     window._importChecked = new Set(
-      rows.map((_,i) => i).filter(i => !dupIndices.has(i))
+      rows.map((_,i) => i).filter(i => !dupIndices.has(i) && !chargeIndices.has(i))
     );
   }
   const dupCount = dupIndices.size;
@@ -1916,6 +1956,7 @@ function renderImportPreview(rows) {
           <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
           <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
           ${dupCount > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 重複 ${dupCount}件（自動チェックOFF）</span>` : ''}
+          ${chargeIndices.size > 0 ? `<span style="color:var(--text3);margin-left:8px;font-size:12px;">チャージ ${chargeIndices.size}件（自動チェックOFF）</span>` : ''}
         </p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">${selectedCount}件を選択中</span>
@@ -1949,11 +1990,14 @@ function renderImportPreview(rows) {
                 ? '<option value="収入" selected>収入</option>'
                 : categories.map(c=>`<option value="${c.name}" ${c.name===r.category?'selected':''}>${c.name}</option>`).join('');
               const isChecked = checked.has(i);
+              const isChargeLine = r.isCharge === true;
               const rowBg = !isChecked
                 ? 'opacity:0.35;'
-                : isIncome
-                  ? 'background:var(--accent-bg);'
-                  : isDup ? 'background:var(--amber-bg);' : '';
+                : isIncome && isChargeLine
+                  ? 'background:var(--bg3);'
+                  : isIncome
+                    ? 'background:var(--accent-bg);'
+                    : isDup ? 'background:var(--amber-bg);' : '';
               return `
               <tr style="${rowBg}">
                 <td style="text-align:center;">
@@ -1968,6 +2012,7 @@ function renderImportPreview(rows) {
                       ${isIncome ? '収入' : '支出'}
                     </span>
                     ${isDup ? '<span style="font-size:10px;color:var(--amber);font-weight:500;">重複</span>' : ''}
+                    ${isChargeLine ? '<span style="font-size:10px;color:var(--text3);font-weight:500;">チャージ</span>' : ''}
                   </div>
                 </td>
                 <td>${r.date}</td>
