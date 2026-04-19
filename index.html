@@ -1029,14 +1029,14 @@ https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
       <input type="text" class="form-control" id="input-memo" placeholder="例：スーパーで食材">
     </div>
 
-    <label class="toggle-wrap" id="shared-toggle-wrap" onclick="document.getElementById('input-shared').click()">
-      <input type="checkbox" id="input-shared">
+    <div class="toggle-wrap" id="shared-toggle-wrap" onclick="document.getElementById('input-shared').click();event.stopPropagation();" style="cursor:pointer;">
+      <input type="checkbox" id="input-shared" onclick="event.stopPropagation();">
       <span class="toggle"></span>
       <span class="toggle-label">
         <strong>共通費（折半）</strong>
         <span style="font-size:12px;color:var(--text3);display:block;">ON にすると金額の 50% を自分の支出としてカウント</span>
       </span>
-    </label>
+    </div>
 
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-add')">キャンセル</button>
@@ -1971,15 +1971,13 @@ function renderImportPreview(rows) {
   });
 
   // デフォルト：重複・チャージはチェックOFF、それ以外はON
-  // isCharge: true のPayPayチャージ行も自動でOFF
+  // 毎回リセット（前回のインポート状態を引き継がない）
   const chargeIndices = new Set(
     rows.map((r,i) => r.isCharge === true ? i : -1).filter(i => i >= 0)
   );
-  if (!window._importChecked) {
-    window._importChecked = new Set(
-      rows.map((_,i) => i).filter(i => !dupIndices.has(i) && !chargeIndices.has(i))
-    );
-  }
+  window._importChecked = new Set(
+    rows.map((_,i) => i).filter(i => !dupIndices.has(i) && !chargeIndices.has(i))
+  );
   const dupCount = dupIndices.size;
   const expenseCount = rows.filter(r => r.isExpense !== false).length;
   const incomeCount  = rows.length - expenseCount;
