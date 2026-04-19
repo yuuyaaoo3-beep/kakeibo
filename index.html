@@ -2025,8 +2025,9 @@ function parseGeneric(rows) {
   return preview;
 }
 
-function smartCategory(desc) {
-  const d = desc.toLowerCase();
+// キーワードマッチによるカテゴリ推定（基本ルール）
+function guessCategory(desc) {
+  const d = (desc || '').toLowerCase();
   if (/電車|バス|鉄道|jr|metro|suica|交通|taxi|タクシー/.test(d)) return '交通費';
   if (/スーパー|食品|飲食|ランチ|カフェ|レストラン|食堂|弁当|uber eats|出前/.test(d)) return '食費';
   if (/amazon|楽天|ショッピング|コンビニ|ドラッグ/.test(d)) return '買い物・日用品';
