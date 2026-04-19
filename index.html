@@ -785,7 +785,7 @@ body {
 <!-- TRANSACTIONS PAGE -->
 <!-- ══════════════════════════════════════════════════ -->
 <section id="page-transactions" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;align-items:center;gap:10px;">
       <h2 style="font-size:18px;font-weight:700;">明細一覧</h2>
       <div id="bulk-delete-bar" style="display:none;align-items:center;gap:8px;">
@@ -794,27 +794,38 @@ body {
         <button class="btn btn-sm" onclick="clearBulkSelect()">選択解除</button>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <input type="text" class="form-control" style="width:180px;padding:6px 10px;font-size:13px;" placeholder="検索…" oninput="renderTransactions()" id="txn-search">
-      <select class="form-control" style="width:130px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-cat-filter">
-        <option value="">カテゴリ全て</option>
-      </select>
-      <select class="form-control" style="width:130px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-tag-filter">
-        <option value="">タグ全て</option>
-        <option>毎月・固定</option>
-        <option>毎月・変動</option>
-        <option>不定・固定</option>
-        <option>不定・変動</option>
-        <option>投資</option>
-        <option>収入・予算内</option>
-        <option>収入・予算外</option>
-      </select>
-      <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 追加</button>
-    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 追加</button>
   </div>
-  <div class="card" style="padding:0;overflow:hidden;">
-    <div id="txn-table-wrap"></div>
+  <!-- フィルターバー -->
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+    <input type="text" class="form-control" style="width:160px;padding:6px 10px;font-size:13px;" placeholder="検索…" oninput="renderTransactions()" id="txn-search">
+    <select class="form-control" style="width:120px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-cat-filter">
+      <option value="">カテゴリ全て</option>
+    </select>
+    <select class="form-control" style="width:120px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-tag-filter">
+      <option value="">タグ全て</option>
+      <option>毎月・固定</option>
+      <option>毎月・変動</option>
+      <option>不定・固定</option>
+      <option>不定・変動</option>
+      <option>投資</option>
+      <option>収入・予算内</option>
+      <option>収入・予算外</option>
+    </select>
+    <select class="form-control" style="width:140px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-source-filter">
+      <option value="">経路全て</option>
+      <option value="manual">現金</option>
+      <option value="mizuho">みずほ銀行</option>
+      <option value="rakuten_bank">楽天銀行</option>
+      <option value="sbi_shared">住信SBI共通</option>
+      <option value="rakuten_card">楽天カード</option>
+      <option value="olive">Olive</option>
+      <option value="paypay">PayPay</option>
+      <option value="paypay_csv">PayPay(CSV)</option>
+      <option value="suica">Suica</option>
+    </select>
   </div>
+  <div id="txn-accordion-wrap"></div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -1236,9 +1247,17 @@ function effectiveAmount(t) {
   return t.shared ? t.amount * 0.5 : t.amount;
 }
 
+// 収入カウント対象の経路（楽天銀行・みずほ・手動のみ）
+// PayPay・Suica・SBI共通はカウントしない
+const INCOME_SOURCES = new Set(['manual', 'mizuho', 'rakuten_bank']);
+
+function isCountableIncome(t) {
+  return t.type === 'income' && INCOME_SOURCES.has(t.source || 'manual');
+}
+
 function renderSummary(filtered) {
   const expenses = filtered.filter(t => t.type === 'expense');
-  const incomes  = filtered.filter(t => t.type === 'income');
+  const incomes  = filtered.filter(t => isCountableIncome(t));
   const totalExp = expenses.reduce((s,t) => s + effectiveAmount(t), 0);
   const totalInc = incomes.reduce((s,t) => s + t.amount, 0);
   const fixedExp = expenses.filter(t => t.tag === '毎月・固定').reduce((s,t)=>s+effectiveAmount(t),0);
@@ -1356,19 +1375,26 @@ function renderDashboardList(filtered) {
 // ═══════════════════════════════════════════════════
 // TRANSACTIONS PAGE
 // ═══════════════════════════════════════════════════
+// 開閉状態を記憶するSet（月キー）
+const openMonths = new Set();
+
 function renderTransactions() {
   const search  = (document.getElementById('txn-search')?.value || '').toLowerCase();
   const catF    = document.getElementById('txn-cat-filter')?.value || '';
   const tagF    = document.getElementById('txn-tag-filter')?.value || '';
+  const srcF    = document.getElementById('txn-source-filter')?.value || '';
 
   let list = [...transactions].sort((a,b) => new Date(b.date)-new Date(a.date));
-  if (search) list = list.filter(t => (t.memo||'').toLowerCase().includes(search) || (t.category||'').includes(search));
-  if (catF)   list = list.filter(t => t.category === catF);
-  if (tagF)   list = list.filter(t => t.tag === tagF);
+  if (search) list = list.filter(t =>
+    (t.memo||'').toLowerCase().includes(search) ||
+    (t.category||'').toLowerCase().includes(search) ||
+    (t.memo||'').includes(search)
+  );
+  if (catF)  list = list.filter(t => t.category === catF);
+  if (tagF)  list = list.filter(t => t.tag === tagF);
+  if (srcF)  list = list.filter(t => (t.source || 'manual') === srcF);
 
-  document.getElementById('txn-table-wrap').innerHTML = renderTxnTable(list, false);
-
-  // populate cat filter
+  // カテゴリフィルターを動的生成（初回のみ）
   const sel = document.getElementById('txn-cat-filter');
   if (sel && sel.options.length <= 1) {
     categories.forEach(c => {
@@ -1377,6 +1403,71 @@ function renderTransactions() {
       sel.appendChild(o);
     });
   }
+
+  // フィルターが何か設定されている場合は月グループ化せず一覧表示
+  const isFiltered = search || catF || tagF || srcF;
+  const wrap = document.getElementById('txn-accordion-wrap');
+  if (!wrap) return;
+
+  if (isFiltered) {
+    // フィルター時：シンプルテーブル（月グループなし）
+    wrap.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">${renderTxnTable(list, false)}</div>`;
+    return;
+  }
+
+  // アコーディオン形式（月ごと）
+  // 月キーでグループ化
+  const groups = {};
+  list.forEach(t => {
+    const d = new Date(t.date);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  if (!Object.keys(groups).length) {
+    wrap.innerHTML = `<div class="empty-state card"><div class="empty-icon">📭</div><p>データがありません</p></div>`;
+    return;
+  }
+
+  // 初回：最新月を開く
+  if (openMonths.size === 0 && Object.keys(groups).length > 0) {
+    openMonths.add(Object.keys(groups)[0]);
+  }
+
+  const months_jp = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  wrap.innerHTML = Object.entries(groups).map(([key, items]) => {
+    const [y, m] = key.split('-');
+    const label = `${y}年 ${months_jp[parseInt(m)-1]}`;
+    const totalExp = items.filter(t=>t.type==='expense').reduce((s,t)=>s+effectiveAmount(t),0);
+    const totalInc = items.filter(t=>isCountableIncome(t)).reduce((s,t)=>s+t.amount,0);
+    const isOpen = openMonths.has(key);
+    const summaryStr = `<span style="font-size:12px;color:var(--red);margin-left:12px;">支出 ¥${Math.round(totalExp).toLocaleString()}</span>` +
+      (totalInc > 0 ? `<span style="font-size:12px;color:var(--accent);margin-left:8px;">収入 ¥${totalInc.toLocaleString()}</span>` : '') +
+      `<span style="font-size:12px;color:var(--text3);margin-left:8px;">${items.length}件</span>`;
+    return `
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:8px;">
+        <div onclick="toggleMonth('${key}')"
+          style="display:flex;align-items:center;padding:12px 16px;cursor:pointer;user-select:none;
+          background:${isOpen?'var(--surface)':'var(--bg2)'};border-bottom:${isOpen?'1px solid var(--border)':'none'};">
+          <span style="font-size:14px;font-weight:500;min-width:110px;">${label}</span>
+          ${summaryStr}
+          <span style="margin-left:auto;font-size:16px;color:var(--text3);transition:transform .2s;
+            transform:${isOpen?'rotate(180deg)':'rotate(0deg)'};">▾</span>
+        </div>
+        ${isOpen ? `<div id="month-body-${key}">${renderTxnTable(items, false)}</div>` : `<div id="month-body-${key}" style="display:none;"></div>`}
+      </div>`;
+  }).join('');
+}
+
+function toggleMonth(key) {
+  if (openMonths.has(key)) {
+    openMonths.delete(key);
+  } else {
+    openMonths.add(key);
+  }
+  renderTransactions();
 }
 
 
