@@ -2069,7 +2069,7 @@ function smartCategory(memo) {
   }
 
   // 2. キーワードマッチにフォールバック
-  return smartCategory(memo);
+  return guessCategory(memo);
 }
 
 // 重複チェック用のキーを生成（日付 + 金額 + メモ の組み合わせ）
