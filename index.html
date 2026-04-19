@@ -1871,8 +1871,12 @@ function parseMizuho(rows) {
 
     if (!isNaN(outAmt) && outAmt > 0) {
       const cat = smartCategory(desc);
-      // PayPay・Suicaチャージ等の振替はデフォルトチェックOFF
-      const isTransfer = /ペイペイ|ﾍﾟｲﾍﾟｲ|paypay|pay.pay|スイカ|ｽｲｶ|suica/i.test(desc);
+      // 他の口座やサービスへの振替・チャージ → デフォルトチェックOFF
+      // 理由：PayPayのCSV・楽天カードCSV・SBIのCSVで別途記録するため二重カウントになる
+      const isTransfer = /ペイペイ|ﾍﾟｲﾍﾟｲ|paypay|pay.pay|スイカ|ｽｲｶ|suica/i.test(desc)  // PayPay・Suicaチャージ
+        || /ラクテンカ|楽天カ|ﾗｸﾃﾝｶ/i.test(desc)          // 楽天カード引き落とし
+        || /SMBC|スミシン|ｽﾐｼﾝ|住信|SBI/i.test(desc)     // SBI共通口座への振込
+        || /振込|ふりこみ|フリコミ|ﾌﾘｺﾐ/.test(desc);       // 汎用振込
       preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true, isCharge: isTransfer });
     } else if (!isNaN(inAmt) && inAmt > 0) {
       preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
@@ -2138,7 +2142,7 @@ function renderImportPreview(rows) {
           <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
           <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
           ${dupCount > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 重複 ${dupCount}件（自動チェックOFF）</span>` : ''}
-          ${chargeIndices.size > 0 ? `<span style="color:var(--text3);margin-left:8px;font-size:12px;">チャージ ${chargeIndices.size}件（自動チェックOFF）</span>` : ''}
+          ${chargeIndices.size > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 二重計上注意 ${chargeIndices.size}件（自動チェックOFF）</span>` : ''}
         </p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">${selectedCount}件を選択中</span>
@@ -2194,7 +2198,7 @@ function renderImportPreview(rows) {
                       ${isIncome ? '収入' : '支出'}
                     </span>
                     ${isDup ? '<span style="font-size:10px;color:var(--amber);font-weight:500;">重複</span>' : ''}
-                    ${isChargeLine ? '<span style="font-size:10px;color:var(--text3);font-weight:500;">チャージ</span>' : ''}
+                    ${isChargeLine ? '<span style="font-size:10px;background:var(--amber-bg);color:var(--amber);padding:1px 5px;border-radius:3px;font-weight:500;">二重計上注意</span>' : ''}
                   </div>
                 </td>
                 <td>${r.date}</td>
