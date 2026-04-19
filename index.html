@@ -1745,6 +1745,8 @@ function splitCSVLine(line) {
 }
 
 function parseCSV(text, source) {
+  // インポート前に過去明細キャッシュを構築
+  buildMemoCategoryCache();
   const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines = raw.split('\n');
   const rows = lines.map(l => splitCSVLine(l));
@@ -1849,7 +1851,7 @@ function parseMizuho(rows) {
     const inAmt   = parseInt((inStr  || '').replace(/,/g, ''), 10);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = guessCategory(desc);
+      const cat = smartCategory(desc);
       // PayPay・Suicaチャージ等の振替はデフォルトチェックOFF
       const isTransfer = /ペイペイ|ﾍﾟｲﾍﾟｲ|paypay|pay.pay|スイカ|ｽｲｶ|suica/i.test(desc);
       preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true, isCharge: isTransfer });
@@ -1891,7 +1893,7 @@ function parseRakutenBank(rows) {
     const desc = descIdx >= 0 ? r[descIdx] : r[r.length - 1] || '';
 
     if (amt < 0) {
-      const cat = guessCategory(desc);
+      const cat = smartCategory(desc);
       preview.push({ date, memo: desc, amount: Math.abs(amt), category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else {
       preview.push({ date, memo: desc, amount: amt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
@@ -1924,7 +1926,7 @@ function parseSBI(rows) {
     const inAmt  = parseInt(((inIdx>=0?r[inIdx]:'')||'').replace(/,/g,''),10);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = guessCategory(desc);
+      const cat = smartCategory(desc);
       preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else if (!isNaN(inAmt) && inAmt > 0) {
       preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
@@ -1954,7 +1956,7 @@ function parseRakutenCard(rows) {
     const desc = descIdx >= 0 ? r[descIdx] : '';
     const amt  = parseInt(((amtIdx>=0?r[amtIdx]:r[r.length-1])||'').replace(/,/g,''),10);
     if (isNaN(amt) || amt <= 0) continue;
-    const cat = guessCategory(desc);
+    const cat = smartCategory(desc);
     preview.push({ date, memo: desc, amount: amt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
   }
   return preview;
@@ -1991,7 +1993,7 @@ function parseOlive(rows) {
         isExpense: false, type: 'income', source: 'olive'
       });
     } else {
-      const cat = guessCategory(desc);
+      const cat = smartCategory(desc);
       preview.push({
         date, memo: desc, amount: amt,
         category: cat,
@@ -2017,13 +2019,13 @@ function parseGeneric(rows) {
     const descCol = r.findIndex((c,idx)=> idx!==dateCol && c.length>0 && !/^[\d,\.\-]+$/.test(c));
     const desc = descCol>=0 ? r[descCol] : '';
     const amt = numCols[0][1];
-    const cat = guessCategory(desc);
+    const cat = smartCategory(desc);
     preview.push({ date, memo: desc, amount: amt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
   }
   return preview;
 }
 
-function guessCategory(desc) {
+function smartCategory(desc) {
   const d = desc.toLowerCase();
   if (/電車|バス|鉄道|jr|metro|suica|交通|taxi|タクシー/.test(d)) return '交通費';
   if (/スーパー|食品|飲食|ランチ|カフェ|レストラン|食堂|弁当|uber eats|出前/.test(d)) return '食費';
@@ -2036,6 +2038,38 @@ function guessCategory(desc) {
   if (/洋服|ファッション|ユニクロ|zara|衣服/.test(d)) return '衣服';
   if (/投資|証券|株|fund|積立/.test(d)) return 'その他';
   return 'その他';
+}
+
+// 過去明細のメモ→カテゴリ対応表（インポート時にキャッシュ）
+let _memoCategoryCache = null;
+
+function buildMemoCategoryCache() {
+  // メモごとに最新の取引を特定してカテゴリを取得
+  const memoMap = {}; // memo → {date, category}
+  transactions
+    .filter(t => t.type === 'expense' && t.memo && t.category)
+    .forEach(t => {
+      const key = (t.memo || '').trim();
+      if (!key) return;
+      if (!memoMap[key] || t.date > memoMap[key].date) {
+        memoMap[key] = { date: t.date, category: t.category };
+      }
+    });
+  _memoCategoryCache = memoMap;
+}
+
+// メモから最適なカテゴリを推定（過去履歴優先 → キーワードマッチ → その他）
+function smartCategory(memo) {
+  if (!memo) return 'その他';
+  const key = memo.trim();
+
+  // 1. 過去明細で同じメモのものがあれば最新カテゴリを使用
+  if (_memoCategoryCache && _memoCategoryCache[key]) {
+    return _memoCategoryCache[key].category;
+  }
+
+  // 2. キーワードマッチにフォールバック
+  return smartCategory(memo);
 }
 
 // 重複チェック用のキーを生成（日付 + 金額 + メモ の組み合わせ）
@@ -2287,6 +2321,7 @@ function handlePayPayCSV(input) {
 }
 
 function parsePayPayCSV(text) {
+  buildMemoCategoryCache();
   const status = document.getElementById('paypay-status');
   const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines = raw.split('\n').filter(l => l.trim());
@@ -2335,7 +2370,7 @@ function parsePayPayCSV(text) {
     const isChargeType = /チャージ|入金|受取|ポイント獲得|ポイント付与|給与/.test(txType);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = guessCategory(memo);
+      const cat = smartCategory(memo);
       preview.push({
         date, memo, amount: outAmt,
         category: cat,
@@ -2462,6 +2497,7 @@ function copySuicaPrompt() {
 }
 
 function importSuicaJSON() {
+  buildMemoCategoryCache();
   const raw = document.getElementById('suica-json').value.trim();
   const status = document.getElementById('suica-status');
   if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
