@@ -28,6 +28,10 @@
   --amber-bg: #fdf5e7;
   --blue: #1a4d8f;
   --blue-bg: #e8eef8;
+  --purple: #7c3aed;
+  --purple-bg: #f3e8ff;
+  --pink: #db2777;
+  --pink-bg: #fce7f3;
   --purple: #5b3d9e;
   --purple-bg: #f0ecfb;
   --teal: #1a6b6b;
@@ -589,6 +593,24 @@ body {
 .btn-google:hover { background:var(--bg2); box-shadow:var(--shadow); }
 .auth-skip { font-size:12px; color:var(--text3); cursor:pointer; text-decoration:underline; margin-top:12px; }
 .auth-skip:hover { color:var(--text2); }
+
+/* Toast通知 */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; min-width: 240px; max-width: 380px; font-size: 13px; animation: toast-in .25s ease-out; pointer-events: auto; }
+.toast.toast-success { border-left: 3px solid var(--accent); }
+.toast.toast-error   { border-left: 3px solid var(--red); }
+.toast.toast-info    { border-left: 3px solid var(--blue); }
+.toast.toast-hiding  { animation: toast-out .2s ease-in forwards; }
+@keyframes toast-in  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
+.toast-icon { font-size: 16px; flex-shrink: 0; }
+.toast-msg  { flex: 1; color: var(--text); line-height: 1.5; }
+
+@media (max-width: 640px) {
+  .toast-container { bottom: 72px; right: 12px; left: 12px; }
+  .toast { min-width: 0; max-width: none; }
+}
+
 </style>
 </head>
 <body>
@@ -980,8 +1002,32 @@ https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-sm" onclick="clearAllData()">🗑 全データ削除</button>
         <button class="btn btn-sm" onclick="loadSampleData()">📊 サンプルデータ読込</button>
+        <button class="btn btn-sm" onclick="exportJSON()">📦 JSONエクスポート</button>
       </div>
-      <p class="form-hint" style="margin-top:8px;">※ データはブラウザのローカルストレージに保存されます</p>
+      <p class="form-hint" style="margin-top:8px;">※ データはブラウザのローカルストレージと Google Drive に保存されます</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">キーボードショートカット</span>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13px;">
+        <kbd style="font-family:var(--mono);padding:2px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);">Esc</kbd>
+        <span style="color:var(--text2);">モーダル・詳細パネルを閉じる</span>
+        <kbd style="font-family:var(--mono);padding:2px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);">Ctrl + K</kbd>
+        <span style="color:var(--text2);">明細一覧の検索にフォーカス</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">このアプリについて</span>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+        <p>個人用家計簿アプリ。データはブラウザのローカルストレージに保存され、Google ログイン時は Drive にも自動同期されます。</p>
+        <p style="margin-top:6px;"><strong>対応CSV：</strong> 楽天銀行・みずほ銀行・住信SBI・楽天カード・Olive・PayPay</p>
+        <p><strong>Suica：</strong> Claude in Chrome 経由で取得</p>
+      </div>
     </div>
 
   </div>
@@ -1667,6 +1713,7 @@ function saveTransaction() {
   saveData(transactions);
   closeModal('modal-add');
   renderAll();
+  showToast(id ? '明細を更新しました' : '明細を追加しました', 'success');
 }
 
 function deleteTransaction(id) {
@@ -1674,6 +1721,7 @@ function deleteTransaction(id) {
   transactions = transactions.filter(t => t.id !== id);
   saveData(transactions);
   renderAll();
+  showToast('明細を削除しました', 'success');
 }
 
 // ═══════════════════════════════════════════════════
@@ -2296,6 +2344,7 @@ function confirmImport() {
       ${skipCnt > 0 ? `<span style="color:var(--text3);margin-left:8px;">${skipCnt}件をスキップ</span>` : ''}
     </div>`;
   renderAll();
+  showToast(`${newTxns.length}件をインポートしました`, 'success');
 }
 
 // Drop zone
@@ -2325,25 +2374,6 @@ dz.addEventListener('drop', e=>{
 // ═══════════════════════════════════════════════════
 // PayPay CSV インポート
 // ═══════════════════════════════════════════════════
-function handlePayPayCSV(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const readerUtf = new FileReader();
-  readerUtf.onload = e => {
-    const text = e.target.result;
-    // 文字化け検出 → Shift-JISフォールバック
-    if ((text.match(/\uFFFD/g)||[]).length > 5) {
-      const readerSjis = new FileReader();
-      readerSjis.onload = ev => parsePayPayCSV(ev.target.result);
-      readerSjis.readAsText(file, 'Shift_JIS');
-    } else {
-      parsePayPayCSV(text);
-    }
-  };
-  readerUtf.readAsText(file, 'UTF-8');
-  input.value = '';
-}
-
 function parsePayPayCSV(text) {
   buildMemoCategoryCache();
   const status = document.getElementById('paypay-status');
@@ -2431,92 +2461,19 @@ function parsePayPayCSV(text) {
 
 // PayPay ドロップゾーンは共通ドロップゾーンに統合済み
 // ═══════════════════════════════════════════════════
-// PayPay 旧コード（互換性のため残す）
-// ═══════════════════════════════════════════════════
-function copyPayPayPrompt() {
-  const text = document.getElementById('paypay-prompt').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = 'コピー済み ✓';
-    btn.style.color = 'var(--accent)';
-    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
-  }).catch(() => {
-    // フォールバック: テキスト選択
-    const el = document.getElementById('paypay-prompt');
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-  });
-}
-
-function importPayPayJSON() {
-  const raw = document.getElementById('paypay-json').value.trim();
-  const status = document.getElementById('paypay-status');
-  if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
-  try {
-    // JSONブロックのコードフェンスを除去
-    const cleaned = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
-    const data = JSON.parse(cleaned);
-    if (!Array.isArray(data)) throw new Error('配列ではありません');
-
-    const newTxns = data.map(r => {
-      const isIncome = r.isIncome === true;
-      const amount = Math.abs(Number(r.amount) || 0);
-      if (!r.date || !amount) return null;
-      const cat = isIncome ? '収入' : guessCategory(r.memo || '');
-      return {
-        id: crypto.randomUUID(),
-        date: normalizeDate(r.date) || r.date,
-        type: isIncome ? 'income' : 'expense',
-        amount,
-        category: cat,
-        tag: isIncome ? '収入・予算内' : (categories.find(c=>c.name===cat)?.defaultTag || '毎月・変動'),
-        memo: r.memo || '',
-        shared: false,
-        source: 'paypay'
-      };
-    }).filter(Boolean);
-
-    if (!newTxns.length) throw new Error('有効なデータがありません');
-
-    // プレビューを経由してインポート（チェックボックス付き）
-    window._importRows = newTxns.map(t => ({
-      date: t.date,
-      memo: t.memo,
-      amount: t.amount,
-      category: t.category,
-      tag: t.tag,
-      isExpense: t.type !== 'income',
-      type: t.type,
-      source: 'paypay'
-    }));
-    renderImportPreview(window._importRows);
-    // プレビューをCSVインポートセクションにスクロール
-    document.getElementById('import-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    status.innerHTML = `<span style="color:var(--accent)">✓ ${newTxns.length}件を検出。下のプレビューで確認してインポートしてください。</span>`;
-    document.getElementById('paypay-json').value = '';
-  } catch(e) {
-    status.innerHTML = `<span style="color:var(--red)">⚠ JSON の形式が正しくありません。Claude の出力をそのまま貼り付けてください。（${e.message}）</span>`;
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// Suica（Claude in Chrome スクレイプ）
+// Suica プロンプトコピー
 // ═══════════════════════════════════════════════════
 function copySuicaPrompt() {
   const text = document.getElementById('suica-prompt').textContent;
   navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = 'コピー済み ✓';
-    btn.style.color = 'var(--accent)';
-    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
+    showToast('プロンプトをコピーしました', 'success', 2000);
   }).catch(() => {
     const el = document.getElementById('suica-prompt');
     const range = document.createRange();
     range.selectNodeContents(el);
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
+    showToast('テキストを選択しました。Ctrl+Cでコピーしてください', 'info', 3000);
   });
 }
 
@@ -2622,6 +2579,27 @@ function deleteCategory(id) {
 // ═══════════════════════════════════════════════════
 // DATA UTILS
 // ═══════════════════════════════════════════════════
+
+// JSONエクスポート
+function exportJSON() {
+  const data = {
+    transactions,
+    categories,
+    balanceEntries,
+    exportedAt: new Date().toISOString(),
+    version: 'kakeibo-v2'
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `kakeibo-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('バックアップをダウンロードしました', 'success');
+}
+
 function clearAllData() {
   if (!confirm('全データを削除します。この操作は取り消せません。')) return;
   transactions = [];
@@ -2791,6 +2769,7 @@ async function loadFromDrive() {
   } catch(e) {
     console.error('Drive load error:', e);
     setSyncState('error', '読込失敗');
+    showToast('Google Driveからの読み込みに失敗しました', 'error');
   }
 }
 
@@ -2827,6 +2806,7 @@ async function saveToDrive() {
   } catch(e) {
     console.error('Drive save error:', e);
     setSyncState('error', '保存失敗');
+    showToast('Google Driveへの保存に失敗しました', 'error');
   }
 }
 
@@ -2855,6 +2835,52 @@ function initAuth() {
   }
 }
 
+
+
+// モーダルのオーバーレイクリックで閉じる
+document.addEventListener('click', e => {
+  if (e.target.classList && e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// Toast通知
+// ═══════════════════════════════════════════════════
+function showToast(msg, type = 'success', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('toast-hiding');
+    setTimeout(() => toast.remove(), 200);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════
+// キーボードショートカット
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  // Esc でモーダルを閉じる
+  if (e.key === 'Escape') {
+    const openModal = document.querySelector('.modal-overlay.open');
+    if (openModal) closeModal(openModal.id);
+    const openDetail = document.querySelector('.detail-panel.open');
+    if (openDetail) closeDetailPanel();
+  }
+  // Ctrl+K / Cmd+K で検索にフォーカス
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    const search = document.getElementById('txn-search');
+    if (search && document.getElementById('page-transactions').classList.contains('active')) {
+      e.preventDefault();
+      search.focus();
+    }
+  }
+});
 
 // ═══════════════════════════════════════════════════
 // BULK SELECT (明細一覧)
@@ -2894,12 +2920,14 @@ function clearBulkSelect() {
 
 function bulkDelete() {
   if (!selectedIds.size) return;
-  if (!confirm(`選択した ${selectedIds.size}件 を削除しますか？この操作は取り消せません。`)) return;
+  const count = selectedIds.size;
+  if (!confirm(`選択した ${count}件 を削除しますか？この操作は取り消せません。`)) return;
   transactions = transactions.filter(t => !selectedIds.has(t.id));
   selectedIds.clear();
   saveData(transactions);
   updateBulkBar();
   renderAll();
+  showToast(`${count}件を削除しました`, 'success');
 }
 
 // ── Event delegation ──
@@ -3208,6 +3236,7 @@ function saveBalanceEntry() {
   saveBalanceData(balanceEntries);
   closeModal('modal-add-balance');
   renderBalanceDashboard();
+  showToast('入金を記録しました', 'success');
 }
 
 // ─── イベントデリゲーション：入金削除 ───
@@ -3229,5 +3258,7 @@ balanceEntries = loadBalanceData();
 renderAll();
 initAuth();
 </script>
+<div class="toast-container" id="toast-container"></div>
+
 </body>
 </html>
