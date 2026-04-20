@@ -541,6 +541,19 @@ body {
     -webkit-overflow-scrolling: touch;
   }
   
+  /* 明細ページのテーブルラッパー専用スタイル */
+  #txn-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+  }
+  
+  /* padding:0のカードは除外 */
+  .card[style*="padding:0"] {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+  
   /* カードヘッダーは固定幅にしない */
   .card-header {
     margin-bottom: 12px;
@@ -556,37 +569,67 @@ body {
     font-size: 12px;
   }
   
-  /* 日付列 */
-  .txn-table th:first-child,
-  .txn-table td:first-child {
-    padding-left: 8px;
+  /* チェックボックス列はコンパクトに */
+  .txn-table th[style*="width:36px"],
+  .txn-table td[style*="width:36px"] {
+    width: 32px !important;
+    padding: 4px;
+  }
+  
+  /* カテゴリ・メモ列 */
+  .txn-table td:nth-child(3),
+  .txn-table td:nth-child(4) {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* タグ列を少し小さく */
+  .badge {
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+  
+  /* 共通費列 */
+  .txn-table td:nth-child(6) {
+    font-size: 10px;
   }
   
   /* 金額列は右揃えを維持しパディングを確保 */
   .txn-table th[style*="text-align:right"],
   .txn-table td.txn-amount {
-    padding-right: 12px;
-    min-width: 80px;
+    padding-right: 8px;
+    min-width: 85px;
+    text-align: right;
+  }
+  
+  .txn-amount {
+    font-size: 13px;
+  }
+  
+  .txn-amount.shared-mark {
+    font-size: 10px;
   }
   
   /* アクションボタン列 */
   .txn-table th:last-child,
   .txn-table td:last-child {
-    padding-right: 12px;
-    min-width: 90px;
+    padding-right: 8px;
+    min-width: 70px;
   }
   
   /* アクションボタンを見やすく */
   .txn-actions {
-    min-width: 80px;
-    gap: 3px;
+    gap: 2px;
+    justify-content: flex-end;
   }
   
   /* 編集・削除ボタンのサイズ調整 */
   .btn-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
   }
   
   .btn-sm {
@@ -595,18 +638,33 @@ body {
   }
   
   /* スクロールバーを常に表示 */
-  .card::-webkit-scrollbar {
+  .card::-webkit-scrollbar,
+  #txn-table-wrap::-webkit-scrollbar {
     height: 6px;
   }
   
-  .card::-webkit-scrollbar-track {
+  .card::-webkit-scrollbar-track,
+  #txn-table-wrap::-webkit-scrollbar-track {
     background: var(--bg2);
     border-radius: 3px;
   }
   
-  .card::-webkit-scrollbar-thumb {
+  .card::-webkit-scrollbar-thumb,
+  #txn-table-wrap::-webkit-scrollbar-thumb {
     background: var(--border2);
     border-radius: 3px;
+  }
+  
+  /* 検索・フィルターエリアをスマホ対応 */
+  #page-transactions > div:first-child > div:last-child {
+    width: 100%;
+  }
+  
+  #txn-search,
+  #txn-cat-filter,
+  #txn-tag-filter {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 @media (min-width: 601px) { .mobile-nav { display: none; } }
