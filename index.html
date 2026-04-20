@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>カケイボ</title>
+<!-- PWA設定 -->
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi44Kr44Kx44Kk44OcIiwic2hvcnRfbmFtZSI6IuOCq+OCseOCpOODnCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjVmNGYwIiwidGhlbWVfY29sb3IiOiIjMmQ1YTI3IiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmclMjB3aWR0aD0lMjcxMDAlMjUlMjclMjB2aWV3Qm94PSUyNzAlMjAwJTIwMzkwJTIwMzkwJTI3JTIweG1sbnM9JTI3aHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmclMjclM0UlM0NyZWN0JTIwd2lkdGg9JTI3MzgwJTI3JTIwaGVpZ2h0PSUyNzM4MCUyNyUyMHJ4PSUyNzgwJTI3JTIwZmlsbD0lMjclMjMyZDVhMjclMjcvJTNFJTNDZyUyMHRyYW5zZm9ybT0lMjd0cmFuc2xhdGUoOTUlMjAxNjUpJTIwcm90YXRlKC04KSUyNyUzRSUzQ3JlY3QlMjB3aWR0aD0lMjcxOTAlMjclMjBoZWlnaHQ9JTI3MTEwJTI3JTIwcng9JTI3OCUyNyUyMGZpbGw9JTI3JTIzMWE0ZDhmJTI3LyUzRSUzQ3JlY3QlMjB4PSUyNzE1JTI3JTIweT0lMjcxNSUyNyUyMHdpZHRoPSUyNzE2MCUyNyUyMGhlaWdodD0lMjcxNSUyNyUyMHJ4PSUyNzMlMjclMjBmaWxsPSUyNyUyM2YwZjRmMCUyNyUyMG9wYWNpdHk9JTI3MC4yNSUyNy8lM0UlM0NjaXJjbGUlMjBjeD0lMjc5NSUyNyUyMGN5PSUyNzU1JTI3JTIwcj0lMjcyOCUyNyUyMGZpbGw9JTI3JTIzZjBmNGYwJTI3JTIwb3BhY2l0eT0lMjcwLjE1JTI3LyUzRSUzQ3JlY3QlMjB4PSUyNzE1JTI3JTIweT0lMjc4MCUyNyUyMHdpZHRoPSUyNzgwJTI3JTIwaGVpZ2h0PSUyNzE1JTI3JTIwcng9JTI3MyUyNyUyMGZpbGw9JTI3JTIzZjBmNGYwJTI3JTIwb3BhY2l0eT0lMjcwLjI1JTI3LyUzRSUzQy9nJTNFJTNDZyUyMHRyYW5zZm9ybT0lMjd0cmFuc2xhdGUoMjIwJTIwMTQwKSUyNyUzRSUzQ2NpcmNsZSUyMHI9JTI3NzUlMjclMjBmaWxsPSUyNyUyMzRhOWQ0NCUyNy8lM0UlM0NjaXJjbGUlMjByPSUyNzYyJTI3JTIwZmlsbD0lMjclMjM2YmM0NWYlMjcvJTNFJTNDY2lyY2xlJTIwcj0lMjc0OCUyNyUyMGZpbGw9JTI3JTIzZjBmNGYwJTI3JTIwb3BhY2l0eT0lMjcwLjEyJTI3LyUzRSUzQ3RleHQlMjB5PSUyNzE1JTI3JTIwdGV4dC1hbmNob3I9JTI3bWlkZGxlJTI3JTIwZm9udC1zaXplPSUyNzY0JTI3JTIwZm9udC13ZWlnaHQ9JTI3NTAwJTI3JTIwZmlsbD0lMjclMjNmMGY0ZjAlMjclMjBvcGFjaXR5PSUyNzAuNiUyNyUzRSVDMiVBNSUzQy90ZXh0JTNFJTNDL2clM0UlM0NnJTIwdHJhbnNmb3JtPSUyN3RyYW5zbGF0ZSg3NSUyMDE5NSklMjByb3RhdGUoNSklMjclM0UlM0NyZWN0JTIwd2lkdGg9JTI3MTkwJTI3JTIwaGVpZ2h0PSUyNzExMCUyNyUyMHJ4PSUyNzglMjclMjBmaWxsPSUyNyUyMzJkNmRiOCUyNy8lM0UlM0NyZWN0JTIweD0lMjcxNSUyNyUyMHk9JTI3MTUlMjclMjB3aWR0aD0lMjcxNjAlMjclMjBoZWlnaHQ9JTI3MTUlMjclMjByeD0lMjczJTI3JTIwZmlsbD0lMjclMjNmMGY0ZjAlMjclMjBvcGFjaXR5PSUyNzAuMyUyNy8lM0UlM0NjaXJjbGUlMjBjeD0lMjc5NSUyNyUyMGN5PSUyNzU1JTI3JTIwcj0lMjcyOCUyNyUyMGZpbGw9JTI3JTIzZjBmNGYwJTI3JTIwb3BhY2l0eT0lMjcwLjIlMjcvJTNFJTNDcmVjdCUyMHg9JTI3MTUlMjclMjB5PSUyNzgwJTI3JTIwd2lkdGg9JTI3ODAlMjclMjBoZWlnaHQ9JTI3MTUlMjclMjByeD0lMjczJTI3JTIwZmlsbD0lMjclMjNmMGY0ZjAlMjclMjBvcGFjaXR5PSUyNzAuMyUyNy8lM0UlM0MvZyUzRSUzQ2clMjB0cmFuc2Zvcm09JTI3dHJhbnNsYXRlKDEyMCUyMDI1MCklMjclM0UlM0NjaXJjbGUlMjByPSUyNzQyJTI3JTIwZmlsbD0lMjclMjM0YTlkNDQlMjcvJTNFJTNDY2lyY2xlJTIwcj0lMjczNSUyNyUyMGZpbGw9JTI3JTIzNmJjNDVmJTI3LyUzRSUzQ2NpcmNsZSUyMHI9JTI3MjglMjclMjBmaWxsPSUyNyUyM2YwZjRmMCUyNyUyMG9wYWNpdHk9JTI3MC4xMiUyNy8lM0UlM0MvZyUzRSUzQy9zdmclM0UiLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV19">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg width='100%25' viewBox='0 0 390 390' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='380' height='380' rx='80' fill='%232d5a27'/%3E%3Cg transform='translate(95 165) rotate(-8)'%3E%3Crect width='190' height='110' rx='8' fill='%231a4d8f'/%3E%3Crect x='15' y='15' width='160' height='15' rx='3' fill='%23f0f4f0' opacity='0.25'/%3E%3Ccircle cx='95' cy='55' r='28' fill='%23f0f4f0' opacity='0.15'/%3E%3Crect x='15' y='80' width='80' height='15' rx='3' fill='%23f0f4f0' opacity='0.25'/%3E%3C/g%3E%3Cg transform='translate(220 140)'%3E%3Ccircle r='75' fill='%234a9d44'/%3E%3Ccircle r='62' fill='%236bc45f'/%3E%3Ccircle r='48' fill='%23f0f4f0' opacity='0.12'/%3E%3Ctext y='15' text-anchor='middle' font-size='64' font-weight='500' fill='%23f0f4f0' opacity='0.6'%3E%C2%A5%3C/text%3E%3C/g%3E%3Cg transform='translate(75 195) rotate(5)'%3E%3Crect width='190' height='110' rx='8' fill='%232d6db8'/%3E%3Crect x='15' y='15' width='160' height='15' rx='3' fill='%23f0f4f0' opacity='0.3'/%3E%3Ccircle cx='95' cy='55' r='28' fill='%23f0f4f0' opacity='0.2'/%3E%3Crect x='15' y='80' width='80' height='15' rx='3' fill='%23f0f4f0' opacity='0.3'/%3E%3C/g%3E%3Cg transform='translate(120 250)'%3E%3Ccircle r='42' fill='%234a9d44'/%3E%3Ccircle r='35' fill='%236bc45f'/%3E%3Ccircle r='28' fill='%23f0f4f0' opacity='0.12'/%3E%3C/g%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="カケイボ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -28,10 +34,6 @@
   --amber-bg: #fdf5e7;
   --blue: #1a4d8f;
   --blue-bg: #e8eef8;
-  --purple: #7c3aed;
-  --purple-bg: #f3e8ff;
-  --pink: #db2777;
-  --pink-bg: #fce7f3;
   --purple: #5b3d9e;
   --purple-bg: #f0ecfb;
   --teal: #1a6b6b;
@@ -114,6 +116,7 @@ body {
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: var(--shadow);
+  position: relative;
 }
 .card-header {
   display: flex;
@@ -530,6 +533,81 @@ body {
   .mobile-nav-btn.active { color: var(--accent); }
   .mobile-nav-icon { font-size: 20px; }
   body { padding-bottom: 72px; }
+  
+  /* テーブルの横スクロール対応 */
+  .card {
+    padding: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* カードヘッダーは固定幅にしない */
+  .card-header {
+    margin-bottom: 12px;
+  }
+  
+  .txn-table {
+    min-width: 750px; /* より広い最小幅を設定 */
+  }
+  
+  .txn-table th,
+  .txn-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  /* 日付列 */
+  .txn-table th:first-child,
+  .txn-table td:first-child {
+    padding-left: 8px;
+  }
+  
+  /* 金額列は右揃えを維持しパディングを確保 */
+  .txn-table th[style*="text-align:right"],
+  .txn-table td.txn-amount {
+    padding-right: 12px;
+    min-width: 80px;
+  }
+  
+  /* アクションボタン列 */
+  .txn-table th:last-child,
+  .txn-table td:last-child {
+    padding-right: 12px;
+    min-width: 90px;
+  }
+  
+  /* アクションボタンを見やすく */
+  .txn-actions {
+    min-width: 80px;
+    gap: 3px;
+  }
+  
+  /* 編集・削除ボタンのサイズ調整 */
+  .btn-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+  
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  /* スクロールバーを常に表示 */
+  .card::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .card::-webkit-scrollbar-track {
+    background: var(--bg2);
+    border-radius: 3px;
+  }
+  
+  .card::-webkit-scrollbar-thumb {
+    background: var(--border2);
+    border-radius: 3px;
+  }
 }
 @media (min-width: 601px) { .mobile-nav { display: none; } }
 
@@ -593,24 +671,6 @@ body {
 .btn-google:hover { background:var(--bg2); box-shadow:var(--shadow); }
 .auth-skip { font-size:12px; color:var(--text3); cursor:pointer; text-decoration:underline; margin-top:12px; }
 .auth-skip:hover { color:var(--text2); }
-
-/* Toast通知 */
-.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.toast { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; min-width: 240px; max-width: 380px; font-size: 13px; animation: toast-in .25s ease-out; pointer-events: auto; }
-.toast.toast-success { border-left: 3px solid var(--accent); }
-.toast.toast-error   { border-left: 3px solid var(--red); }
-.toast.toast-info    { border-left: 3px solid var(--blue); }
-.toast.toast-hiding  { animation: toast-out .2s ease-in forwards; }
-@keyframes toast-in  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
-.toast-icon { font-size: 16px; flex-shrink: 0; }
-.toast-msg  { flex: 1; color: var(--text); line-height: 1.5; }
-
-@media (max-width: 640px) {
-  .toast-container { bottom: 72px; right: 12px; left: 12px; }
-  .toast { min-width: 0; max-width: none; }
-}
-
 </style>
 </head>
 <body>
@@ -807,7 +867,7 @@ body {
 <!-- TRANSACTIONS PAGE -->
 <!-- ══════════════════════════════════════════════════ -->
 <section id="page-transactions" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;align-items:center;gap:10px;">
       <h2 style="font-size:18px;font-weight:700;">明細一覧</h2>
       <div id="bulk-delete-bar" style="display:none;align-items:center;gap:8px;">
@@ -816,38 +876,27 @@ body {
         <button class="btn btn-sm" onclick="clearBulkSelect()">選択解除</button>
       </div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 追加</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" class="form-control" style="width:180px;padding:6px 10px;font-size:13px;" placeholder="検索…" oninput="renderTransactions()" id="txn-search">
+      <select class="form-control" style="width:130px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-cat-filter">
+        <option value="">カテゴリ全て</option>
+      </select>
+      <select class="form-control" style="width:130px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-tag-filter">
+        <option value="">タグ全て</option>
+        <option>毎月・固定</option>
+        <option>毎月・変動</option>
+        <option>不定・固定</option>
+        <option>不定・変動</option>
+        <option>投資</option>
+        <option>収入・予算内</option>
+        <option>収入・予算外</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 追加</button>
+    </div>
   </div>
-  <!-- フィルターバー -->
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
-    <input type="text" class="form-control" style="width:160px;padding:6px 10px;font-size:13px;" placeholder="検索…" oninput="renderTransactions()" id="txn-search">
-    <select class="form-control" style="width:120px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-cat-filter">
-      <option value="">カテゴリ全て</option>
-    </select>
-    <select class="form-control" style="width:120px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-tag-filter">
-      <option value="">タグ全て</option>
-      <option>毎月・固定</option>
-      <option>毎月・変動</option>
-      <option>不定・固定</option>
-      <option>不定・変動</option>
-      <option>投資</option>
-      <option>収入・予算内</option>
-      <option>収入・予算外</option>
-    </select>
-    <select class="form-control" style="width:140px;padding:6px 10px;font-size:13px;" onchange="renderTransactions()" id="txn-source-filter">
-      <option value="">経路全て</option>
-      <option value="manual">現金</option>
-      <option value="mizuho">みずほ銀行</option>
-      <option value="rakuten_bank">楽天銀行</option>
-      <option value="sbi_shared">住信SBI共通</option>
-      <option value="rakuten_card">楽天カード</option>
-      <option value="olive">Olive</option>
-      <option value="paypay">PayPay</option>
-      <option value="paypay_csv">PayPay(CSV)</option>
-      <option value="suica">Suica</option>
-    </select>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="txn-table-wrap"></div>
   </div>
-  <div id="txn-accordion-wrap"></div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -1002,32 +1051,8 @@ https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-sm" onclick="clearAllData()">🗑 全データ削除</button>
         <button class="btn btn-sm" onclick="loadSampleData()">📊 サンプルデータ読込</button>
-        <button class="btn btn-sm" onclick="exportJSON()">📦 JSONエクスポート</button>
       </div>
-      <p class="form-hint" style="margin-top:8px;">※ データはブラウザのローカルストレージと Google Drive に保存されます</p>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">キーボードショートカット</span>
-      </div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13px;">
-        <kbd style="font-family:var(--mono);padding:2px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);">Esc</kbd>
-        <span style="color:var(--text2);">モーダル・詳細パネルを閉じる</span>
-        <kbd style="font-family:var(--mono);padding:2px 8px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);">Ctrl + K</kbd>
-        <span style="color:var(--text2);">明細一覧の検索にフォーカス</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">このアプリについて</span>
-      </div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.8;">
-        <p>個人用家計簿アプリ。データはブラウザのローカルストレージに保存され、Google ログイン時は Drive にも自動同期されます。</p>
-        <p style="margin-top:6px;"><strong>対応CSV：</strong> 楽天銀行・みずほ銀行・住信SBI・楽天カード・Olive・PayPay</p>
-        <p><strong>Suica：</strong> Claude in Chrome 経由で取得</p>
-      </div>
+      <p class="form-hint" style="margin-top:8px;">※ データはブラウザのローカルストレージに保存されます</p>
     </div>
 
   </div>
@@ -1086,14 +1111,14 @@ https://www.mobilesuica.com/iq/ir/SuicaDisp.aspx?returnId=SFRCMMEPC03
       <input type="text" class="form-control" id="input-memo" placeholder="例：スーパーで食材">
     </div>
 
-    <div class="toggle-wrap" id="shared-toggle-wrap" onclick="document.getElementById('input-shared').click();event.stopPropagation();" style="cursor:pointer;">
-      <input type="checkbox" id="input-shared" onclick="event.stopPropagation();">
+    <label class="toggle-wrap" id="shared-toggle-wrap" onclick="document.getElementById('input-shared').click()">
+      <input type="checkbox" id="input-shared">
       <span class="toggle"></span>
       <span class="toggle-label">
         <strong>共通費（折半）</strong>
         <span style="font-size:12px;color:var(--text3);display:block;">ON にすると金額の 50% を自分の支出としてカウント</span>
       </span>
-    </div>
+    </label>
 
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-add')">キャンセル</button>
@@ -1293,17 +1318,9 @@ function effectiveAmount(t) {
   return t.shared ? t.amount * 0.5 : t.amount;
 }
 
-// 収入カウント対象の経路（楽天銀行・みずほ・手動のみ）
-// PayPay・Suica・SBI共通はカウントしない
-const INCOME_SOURCES = new Set(['manual', 'mizuho', 'rakuten_bank']);
-
-function isCountableIncome(t) {
-  return t.type === 'income' && INCOME_SOURCES.has(t.source || 'manual');
-}
-
 function renderSummary(filtered) {
   const expenses = filtered.filter(t => t.type === 'expense');
-  const incomes  = filtered.filter(t => isCountableIncome(t));
+  const incomes  = filtered.filter(t => t.type === 'income');
   const totalExp = expenses.reduce((s,t) => s + effectiveAmount(t), 0);
   const totalInc = incomes.reduce((s,t) => s + t.amount, 0);
   const fixedExp = expenses.filter(t => t.tag === '毎月・固定').reduce((s,t)=>s+effectiveAmount(t),0);
@@ -1421,26 +1438,19 @@ function renderDashboardList(filtered) {
 // ═══════════════════════════════════════════════════
 // TRANSACTIONS PAGE
 // ═══════════════════════════════════════════════════
-// 開閉状態を記憶するSet（月キー）
-const openMonths = new Set();
-
 function renderTransactions() {
   const search  = (document.getElementById('txn-search')?.value || '').toLowerCase();
   const catF    = document.getElementById('txn-cat-filter')?.value || '';
   const tagF    = document.getElementById('txn-tag-filter')?.value || '';
-  const srcF    = document.getElementById('txn-source-filter')?.value || '';
 
   let list = [...transactions].sort((a,b) => new Date(b.date)-new Date(a.date));
-  if (search) list = list.filter(t =>
-    (t.memo||'').toLowerCase().includes(search) ||
-    (t.category||'').toLowerCase().includes(search) ||
-    (t.memo||'').includes(search)
-  );
-  if (catF)  list = list.filter(t => t.category === catF);
-  if (tagF)  list = list.filter(t => t.tag === tagF);
-  if (srcF)  list = list.filter(t => (t.source || 'manual') === srcF);
+  if (search) list = list.filter(t => (t.memo||'').toLowerCase().includes(search) || (t.category||'').includes(search));
+  if (catF)   list = list.filter(t => t.category === catF);
+  if (tagF)   list = list.filter(t => t.tag === tagF);
 
-  // カテゴリフィルターを動的生成（初回のみ）
+  document.getElementById('txn-table-wrap').innerHTML = renderTxnTable(list, false);
+
+  // populate cat filter
   const sel = document.getElementById('txn-cat-filter');
   if (sel && sel.options.length <= 1) {
     categories.forEach(c => {
@@ -1449,102 +1459,6 @@ function renderTransactions() {
       sel.appendChild(o);
     });
   }
-
-  // フィルターが何か設定されている場合は月グループ化せず一覧表示
-  const isFiltered = search || catF || tagF || srcF;
-  const wrap = document.getElementById('txn-accordion-wrap');
-  if (!wrap) return;
-
-  if (isFiltered) {
-    // フィルター時：シンプルテーブル（月グループなし）
-    wrap.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">${renderTxnTable(list, false)}</div>`;
-    return;
-  }
-
-  // アコーディオン形式（月ごと）
-  // 月キーでグループ化
-  const groups = {};
-  list.forEach(t => {
-    const d = new Date(t.date);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(t);
-  });
-
-  if (!Object.keys(groups).length) {
-    wrap.innerHTML = `<div class="empty-state card"><div class="empty-icon">📭</div><p>データがありません</p></div>`;
-    return;
-  }
-
-  // 初回：最新月を開く
-  if (openMonths.size === 0 && Object.keys(groups).length > 0) {
-    openMonths.add(Object.keys(groups)[0]);
-  }
-
-  const months_jp = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-
-  wrap.innerHTML = Object.entries(groups).map(([key, items]) => {
-    const [y, m] = key.split('-');
-    const label = `${y}年 ${months_jp[parseInt(m)-1]}`;
-    const totalExp = items.filter(t=>t.type==='expense').reduce((s,t)=>s+effectiveAmount(t),0);
-    const totalInc = items.filter(t=>isCountableIncome(t)).reduce((s,t)=>s+t.amount,0);
-    const isOpen = openMonths.has(key);
-    const summaryStr = `<span style="font-size:12px;color:var(--red);margin-left:12px;">支出 ¥${Math.round(totalExp).toLocaleString()}</span>` +
-      (totalInc > 0 ? `<span style="font-size:12px;color:var(--accent);margin-left:8px;">収入 ¥${totalInc.toLocaleString()}</span>` : '') +
-      `<span style="font-size:12px;color:var(--text3);margin-left:8px;">${items.length}件</span>`;
-    return `
-      <div class="card" style="padding:0;overflow:hidden;margin-bottom:8px;">
-        <div onclick="toggleMonth('${key}')"
-          style="display:flex;align-items:center;padding:12px 16px;cursor:pointer;user-select:none;
-          background:${isOpen?'var(--surface)':'var(--bg2)'};border-bottom:${isOpen?'1px solid var(--border)':'none'};">
-          <span style="font-size:14px;font-weight:500;min-width:110px;">${label}</span>
-          ${summaryStr}
-          <span style="margin-left:auto;font-size:16px;color:var(--text3);transition:transform .2s;
-            transform:${isOpen?'rotate(180deg)':'rotate(0deg)'};">▾</span>
-        </div>
-        ${isOpen ? `<div id="month-body-${key}">${renderTxnTable(items, false)}</div>` : `<div id="month-body-${key}" style="display:none;"></div>`}
-      </div>`;
-  }).join('');
-}
-
-function toggleMonth(key) {
-  if (openMonths.has(key)) {
-    openMonths.delete(key);
-  } else {
-    openMonths.add(key);
-  }
-  renderTransactions();
-}
-
-
-// ソース名 → 表示ラベル変換
-function sourceLabel(t) {
-  const map = {
-    manual:       { label: '現金', color: '#78716c', text: '#fff' },
-    csv:          { label: 'CSV', color: 'var(--bg3)', text: 'var(--text2)' },
-    rakuten_bank: { label: '楽天銀行', color: '#bf0000', text: '#fff' },
-    mizuho:       { label: 'みずほ銀行', color: '#003087', text: '#fff' },
-    sbi:          { label: '住信SBI', color: '#0066cc', text: '#fff' },
-    sbi_shared:   { label: '住信SBI共通', color: '#0066cc', text: '#fff' },
-    rakuten_card: { label: '楽天カード', color: '#bf0000', text: '#fff' },
-    olive:        { label: 'Olive', color: '#006934', text: '#fff' },
-    paypay:       { label: 'PayPay', color: '#e00', text: '#fff' },
-    paypay_csv:   { label: 'PayPay', color: '#e00', text: '#fff' },
-    suica:        { label: 'Suica', color: '#1a7a3e', text: '#fff' },
-  };
-  const s = map[t.source] || map.manual;
-  let badge = `<span style="display:inline-block;padding:1px 6px;border-radius:100px;font-size:10px;font-weight:500;background:${s.color};color:${s.text};white-space:nowrap;">${s.label}</span>`;
-  if (t.shared) badge += `<span style="display:inline-block;margin-left:3px;padding:1px 5px;border-radius:100px;font-size:10px;background:var(--purple-bg);color:var(--purple);font-weight:500;">共通</span>`;
-  return badge;
-}
-
-// 登録日時を人間が読みやすい形式に
-function formatCreatedAt(t) {
-  if (!t.createdAt) return '';
-  const d = new Date(t.createdAt);
-  const y = d.getFullYear(), mo = d.getMonth()+1, day = d.getDate();
-  const h = String(d.getHours()).padStart(2,'0'), m = String(d.getMinutes()).padStart(2,'0');
-  return `${y}/${mo}/${day} ${h}:${m}`;
 }
 
 function renderTxnTable(list, compact) {
@@ -1555,7 +1469,7 @@ function renderTxnTable(list, compact) {
     const eff = effectiveAmount(t);
     const isIncome = t.type === 'income';
     const safeId = encodeURIComponent(t.id);
-    const isChecked = !compact && selectedIds.has(t.id);
+    const isChecked = selectedIds.has(t.id);
     return `
     <tr style="${isChecked ? 'background:var(--blue-bg);' : ''}">
       ${!compact ? `<td style="width:36px;text-align:center;">
@@ -1563,22 +1477,17 @@ function renderTxnTable(list, compact) {
           style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);"
           ${isChecked ? 'checked' : ''}>
       </td>` : ''}
-      <td>
-        <span class="txn-date">${t.date}</span>
-        ${!compact && t.createdAt ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">${formatCreatedAt(t)}</div>` : ''}
-      </td>
+      <td><span class="txn-date">${t.date}</span></td>
       <td>
         <span class="cat-dot" style="background:${color}"></span>
         ${t.category || ''}
       </td>
-      <td style="max-width:${compact?'160px':'220px'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(t.memo||'').replace(/"/g,'&quot;')}">
-        ${(t.memo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-      </td>
-      ${!compact ? `<td style="white-space:nowrap;">${sourceLabel(t)}</td>` : ''}
+      <td>${(t.memo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
       <td><span class="badge badge-${tagClass(t.tag)}">${t.tag||''}</span></td>
+      ${!compact ? `<td>${t.shared?'<span style="font-size:11px;color:var(--text3)">折半</span>':''}</td>` : ''}
       <td class="txn-amount ${isIncome?'income':'expense'}">
         ${isIncome?'+':'-'}¥${Math.round(eff).toLocaleString()}
-        ${t.shared?`<div style="font-size:10px;color:var(--text3);">元¥${t.amount.toLocaleString()}</div>`:''}
+        ${t.shared?`<div class="txn-amount shared-mark">元¥${t.amount.toLocaleString()}</div>`:''}
       </td>
       ${!compact?`<td><div class="txn-actions">
         <button class="btn btn-icon btn-sm" data-action="edit" data-id="${safeId}" title="編集">✏️</button>
@@ -1596,9 +1505,8 @@ function renderTxnTable(list, compact) {
           ${allChecked ? 'checked' : ''}
           onchange="toggleAllSelect(this.checked)">
       </th>`:''}
-      <th>日付</th><th>カテゴリ</th><th>メモ</th>
-      ${!compact?'<th>経路</th>':''}
-      <th>タグ</th>
+      <th>日付</th><th>カテゴリ</th><th>メモ</th><th>タグ</th>
+      ${!compact?'<th>共通費</th>':''}
       <th style="text-align:right">金額</th>
       ${!compact?'<th></th>':''}
     </tr></thead>
@@ -1701,8 +1609,7 @@ function saveTransaction() {
 
   if (!date || isNaN(amount) || amount <= 0) { alert('日付と金額を正しく入力してください'); return; }
 
-  const now = new Date().toISOString();
-  const obj = { id: id || crypto.randomUUID(), date, type, amount, category: type==='income'?'収入':category, tag, memo, shared: type==='income'?false:shared, source: id?undefined:'manual', createdAt: id ? undefined : now, updatedAt: now };
+  const obj = { id: id || crypto.randomUUID(), date, type, amount, category: type==='income'?'収入':category, tag, memo, shared: type==='income'?false:shared, source: id?undefined:'manual' };
 
   if (id) {
     const idx = transactions.findIndex(t=>t.id===id);
@@ -1713,7 +1620,6 @@ function saveTransaction() {
   saveData(transactions);
   closeModal('modal-add');
   renderAll();
-  showToast(id ? '明細を更新しました' : '明細を追加しました', 'success');
 }
 
 function deleteTransaction(id) {
@@ -1721,7 +1627,6 @@ function deleteTransaction(id) {
   transactions = transactions.filter(t => t.id !== id);
   saveData(transactions);
   renderAll();
-  showToast('明細を削除しました', 'success');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1761,39 +1666,20 @@ function handleCSV(input) {
   const file = input.files[0];
   if (!file) return;
   const source = document.getElementById('csv-source').value;
-  // try-catchで全体をラップしてエラーを表示
-  try {
-    const readerUtf = new FileReader();
-    readerUtf.onerror = () => {
-      document.getElementById('import-preview').innerHTML =
-        '<p style="color:var(--red);padding:12px;">ファイル読み込みエラー</p>';
-    };
-    readerUtf.onload = e => {
-      try {
-        const text = e.target.result;
-        if ((text.match(/\uFFFD/g)||[]).length > 5) {
-          const readerSjis = new FileReader();
-          readerSjis.onload = ev => {
-            try { parseCSV(ev.target.result, source); }
-            catch(err) {
-              document.getElementById('import-preview').innerHTML =
-                `<p style="color:var(--red);padding:12px;">パースエラー: ${err.message}</p>`;
-            }
-          };
-          readerSjis.readAsText(file, 'Shift_JIS');
-        } else {
-          parseCSV(text, source);
-        }
-      } catch(err) {
-        document.getElementById('import-preview').innerHTML =
-          `<p style="color:var(--red);padding:12px;">エラー: ${err.message}</p>`;
-      }
-    };
-    readerUtf.readAsText(file, 'UTF-8');
-  } catch(err) {
-    document.getElementById('import-preview').innerHTML =
-      `<p style="color:var(--red);padding:12px;">エラー: ${err.message}</p>`;
-  }
+  // まずUTF-8で試み、文字化けがあればShift-JISで再読み込み
+  const readerUtf = new FileReader();
+  readerUtf.onload = e => {
+    const text = e.target.result;
+    // 文字化け検出：UTF-8で読んで置換文字(U+FFFD)が多い場合はShift-JISで再試行
+    if ((text.match(/\uFFFD/g)||[]).length > 5) {
+      const readerSjis = new FileReader();
+      readerSjis.onload = ev => parseCSV(ev.target.result, source);
+      readerSjis.readAsText(file, 'Shift_JIS');
+    } else {
+      parseCSV(text, source);
+    }
+  };
+  readerUtf.readAsText(file, 'UTF-8');
   input.value = '';
 }
 
@@ -1812,8 +1698,6 @@ function splitCSVLine(line) {
 }
 
 function parseCSV(text, source) {
-  // インポート前に過去明細キャッシュを構築
-  try { buildMemoCategoryCache(); } catch(e) { console.warn('cache build error:', e); }
   const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines = raw.split('\n');
   const rows = lines.map(l => splitCSVLine(l));
@@ -1832,7 +1716,9 @@ function parseCSV(text, source) {
   } else if (source === 'olive') {
     preview = parseOlive(rows);
   } else if (source === 'sbi_shared') {
+    // 共通口座：SBIパーサーを使い、収入行に入金者選択を追加
     preview = parseSBI(rows);
+    preview = preview.map(r => ({ ...r, source: 'sbi_shared' }));
   } else if (source === 'paypay_csv') {
     parsePayPayCSV(text);
     return;
@@ -1842,9 +1728,6 @@ function parseCSV(text, source) {
   if (!preview.length) {
     preview = parseGeneric(rows);
   }
-
-  // ── source を全行に一括付与（Oliveは自前でsourceを付けているので上書きしない）──
-  preview = preview.map(r => ({ ...r, source: r.source || source }));
 
   if (!preview.length) {
     document.getElementById('import-preview').innerHTML = `
@@ -1918,15 +1801,11 @@ function parseMizuho(rows) {
     const inAmt   = parseInt((inStr  || '').replace(/,/g, ''), 10);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = smartCategory(desc);
-      // 他の口座やサービスへの振替・チャージ → デフォルトチェックOFF
-      // 理由：PayPayのCSV・楽天カードCSV・SBIのCSVで別途記録するため二重カウントになる
-      const isTransfer = /ペイペイ|ﾍﾟｲﾍﾟｲ|paypay|pay.pay|スイカ|ｽｲｶ|suica/i.test(desc)  // PayPay・Suicaチャージ
-        || /ラクテンカ|楽天カ|ﾗｸﾃﾝｶ/i.test(desc)          // 楽天カード引き落とし
-        || /SMBC|スミシン|ｽﾐｼﾝ|住信|SBI/i.test(desc)     // SBI共通口座への振込
-        || /振込|ふりこみ|フリコミ|ﾌﾘｺﾐ/.test(desc);       // 汎用振込
-      preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true, isCharge: isTransfer });
+      const cat = guessCategory(desc);
+      preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else if (!isNaN(inAmt) && inAmt > 0) {
+      const cat2 = guessCategory(desc);
+      const tag2 = (cat2 === 'その他') ? '収入・予算内' : categories.find(c=>c.name===cat2)?.defaultTag||'収入・予算内';
       preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
     }
   }
@@ -1964,7 +1843,7 @@ function parseRakutenBank(rows) {
     const desc = descIdx >= 0 ? r[descIdx] : r[r.length - 1] || '';
 
     if (amt < 0) {
-      const cat = smartCategory(desc);
+      const cat = guessCategory(desc);
       preview.push({ date, memo: desc, amount: Math.abs(amt), category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else {
       preview.push({ date, memo: desc, amount: amt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
@@ -1997,7 +1876,7 @@ function parseSBI(rows) {
     const inAmt  = parseInt(((inIdx>=0?r[inIdx]:'')||'').replace(/,/g,''),10);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = smartCategory(desc);
+      const cat = guessCategory(desc);
       preview.push({ date, memo: desc, amount: outAmt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
     } else if (!isNaN(inAmt) && inAmt > 0) {
       preview.push({ date, memo: desc, amount: inAmt, category: '収入', tag: '収入・予算内', isExpense: false, type: 'income' });
@@ -2027,7 +1906,7 @@ function parseRakutenCard(rows) {
     const desc = descIdx >= 0 ? r[descIdx] : '';
     const amt  = parseInt(((amtIdx>=0?r[amtIdx]:r[r.length-1])||'').replace(/,/g,''),10);
     if (isNaN(amt) || amt <= 0) continue;
-    const cat = smartCategory(desc);
+    const cat = guessCategory(desc);
     preview.push({ date, memo: desc, amount: amt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
   }
   return preview;
@@ -2064,7 +1943,7 @@ function parseOlive(rows) {
         isExpense: false, type: 'income', source: 'olive'
       });
     } else {
-      const cat = smartCategory(desc);
+      const cat = guessCategory(desc);
       preview.push({
         date, memo: desc, amount: amt,
         category: cat,
@@ -2090,15 +1969,14 @@ function parseGeneric(rows) {
     const descCol = r.findIndex((c,idx)=> idx!==dateCol && c.length>0 && !/^[\d,\.\-]+$/.test(c));
     const desc = descCol>=0 ? r[descCol] : '';
     const amt = numCols[0][1];
-    const cat = smartCategory(desc);
+    const cat = guessCategory(desc);
     preview.push({ date, memo: desc, amount: amt, category: cat, tag: categories.find(c=>c.name===cat)?.defaultTag||'毎月・変動', isExpense: true });
   }
   return preview;
 }
 
-// キーワードマッチによるカテゴリ推定（基本ルール）
 function guessCategory(desc) {
-  const d = (desc || '').toLowerCase();
+  const d = desc.toLowerCase();
   if (/電車|バス|鉄道|jr|metro|suica|交通|taxi|タクシー/.test(d)) return '交通費';
   if (/スーパー|食品|飲食|ランチ|カフェ|レストラン|食堂|弁当|uber eats|出前/.test(d)) return '食費';
   if (/amazon|楽天|ショッピング|コンビニ|ドラッグ/.test(d)) return '買い物・日用品';
@@ -2110,38 +1988,6 @@ function guessCategory(desc) {
   if (/洋服|ファッション|ユニクロ|zara|衣服/.test(d)) return '衣服';
   if (/投資|証券|株|fund|積立/.test(d)) return 'その他';
   return 'その他';
-}
-
-// 過去明細のメモ→カテゴリ対応表（インポート時にキャッシュ）
-let _memoCategoryCache = null;
-
-function buildMemoCategoryCache() {
-  // メモごとに最新の取引を特定してカテゴリを取得
-  const memoMap = {}; // memo → {date, category}
-  transactions
-    .filter(t => t.type === 'expense' && t.memo && t.category)
-    .forEach(t => {
-      const key = (t.memo || '').trim();
-      if (!key) return;
-      if (!memoMap[key] || t.date > memoMap[key].date) {
-        memoMap[key] = { date: t.date, category: t.category };
-      }
-    });
-  _memoCategoryCache = memoMap;
-}
-
-// メモから最適なカテゴリを推定（過去履歴優先 → キーワードマッチ → その他）
-function smartCategory(memo) {
-  if (!memo) return 'その他';
-  const key = memo.trim();
-
-  // 1. 過去明細で同じメモのものがあれば最新カテゴリを使用
-  if (_memoCategoryCache && _memoCategoryCache[key]) {
-    return _memoCategoryCache[key].category;
-  }
-
-  // 2. キーワードマッチにフォールバック
-  return guessCategory(memo);
 }
 
 // 重複チェック用のキーを生成（日付 + 金額 + メモ の組み合わせ）
@@ -2168,13 +2014,15 @@ function renderImportPreview(rows) {
   });
 
   // デフォルト：重複・チャージはチェックOFF、それ以外はON
-  // 毎回リセット（前回のインポート状態を引き継がない）
+  // isCharge: true のPayPayチャージ行も自動でOFF
   const chargeIndices = new Set(
     rows.map((r,i) => r.isCharge === true ? i : -1).filter(i => i >= 0)
   );
-  window._importChecked = new Set(
-    rows.map((_,i) => i).filter(i => !dupIndices.has(i) && !chargeIndices.has(i))
-  );
+  if (!window._importChecked) {
+    window._importChecked = new Set(
+      rows.map((_,i) => i).filter(i => !dupIndices.has(i) && !chargeIndices.has(i))
+    );
+  }
   const dupCount = dupIndices.size;
   const expenseCount = rows.filter(r => r.isExpense !== false).length;
   const incomeCount  = rows.length - expenseCount;
@@ -2190,7 +2038,7 @@ function renderImportPreview(rows) {
           <span style="color:var(--red);margin-left:8px;">支出 ${expenseCount}件</span>
           <span style="color:var(--accent);margin-left:8px;">収入 ${incomeCount}件</span>
           ${dupCount > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 重複 ${dupCount}件（自動チェックOFF）</span>` : ''}
-          ${chargeIndices.size > 0 ? `<span style="color:var(--amber);margin-left:8px;font-size:12px;">⚠ 二重計上注意 ${chargeIndices.size}件（自動チェックOFF）</span>` : ''}
+          ${chargeIndices.size > 0 ? `<span style="color:var(--text3);margin-left:8px;font-size:12px;">チャージ ${chargeIndices.size}件（自動チェックOFF）</span>` : ''}
         </p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">${selectedCount}件を選択中</span>
@@ -2246,7 +2094,7 @@ function renderImportPreview(rows) {
                       ${isIncome ? '収入' : '支出'}
                     </span>
                     ${isDup ? '<span style="font-size:10px;color:var(--amber);font-weight:500;">重複</span>' : ''}
-                    ${isChargeLine ? '<span style="font-size:10px;background:var(--amber-bg);color:var(--amber);padding:1px 5px;border-radius:3px;font-weight:500;">二重計上注意</span>' : ''}
+                    ${isChargeLine ? '<span style="font-size:10px;color:var(--text3);font-weight:500;">チャージ</span>' : ''}
                   </div>
                 </td>
                 <td>${r.date}</td>
@@ -2327,8 +2175,7 @@ function confirmImport() {
       memo: r.memo,
       shared: autoShared && !isIncome,
       payer: isIncome ? payer : null,
-      source: r.source || 'csv',
-      createdAt: new Date().toISOString()
+      source: r.source || 'csv'
     };
   });
   transactions.push(...newTxns);
@@ -2344,7 +2191,6 @@ function confirmImport() {
       ${skipCnt > 0 ? `<span style="color:var(--text3);margin-left:8px;">${skipCnt}件をスキップ</span>` : ''}
     </div>`;
   renderAll();
-  showToast(`${newTxns.length}件をインポートしました`, 'success');
 }
 
 // Drop zone
@@ -2374,8 +2220,26 @@ dz.addEventListener('drop', e=>{
 // ═══════════════════════════════════════════════════
 // PayPay CSV インポート
 // ═══════════════════════════════════════════════════
+function handlePayPayCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const readerUtf = new FileReader();
+  readerUtf.onload = e => {
+    const text = e.target.result;
+    // 文字化け検出 → Shift-JISフォールバック
+    if ((text.match(/\uFFFD/g)||[]).length > 5) {
+      const readerSjis = new FileReader();
+      readerSjis.onload = ev => parsePayPayCSV(ev.target.result);
+      readerSjis.readAsText(file, 'Shift_JIS');
+    } else {
+      parsePayPayCSV(text);
+    }
+  };
+  readerUtf.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
 function parsePayPayCSV(text) {
-  buildMemoCategoryCache();
   const status = document.getElementById('paypay-status');
   const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const lines = raw.split('\n').filter(l => l.trim());
@@ -2424,7 +2288,7 @@ function parsePayPayCSV(text) {
     const isChargeType = /チャージ|入金|受取|ポイント獲得|ポイント付与|給与/.test(txType);
 
     if (!isNaN(outAmt) && outAmt > 0) {
-      const cat = smartCategory(memo);
+      const cat = guessCategory(memo);
       preview.push({
         date, memo, amount: outAmt,
         category: cat,
@@ -2461,24 +2325,96 @@ function parsePayPayCSV(text) {
 
 // PayPay ドロップゾーンは共通ドロップゾーンに統合済み
 // ═══════════════════════════════════════════════════
-// Suica プロンプトコピー
+// PayPay 旧コード（互換性のため残す）
+// ═══════════════════════════════════════════════════
+function copyPayPayPrompt() {
+  const text = document.getElementById('paypay-prompt').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
+  }).catch(() => {
+    // フォールバック: テキスト選択
+    const el = document.getElementById('paypay-prompt');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+
+function importPayPayJSON() {
+  const raw = document.getElementById('paypay-json').value.trim();
+  const status = document.getElementById('paypay-status');
+  if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
+  try {
+    // JSONブロックのコードフェンスを除去
+    const cleaned = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+    const data = JSON.parse(cleaned);
+    if (!Array.isArray(data)) throw new Error('配列ではありません');
+
+    const newTxns = data.map(r => {
+      const isIncome = r.isIncome === true;
+      const amount = Math.abs(Number(r.amount) || 0);
+      if (!r.date || !amount) return null;
+      const cat = isIncome ? '収入' : guessCategory(r.memo || '');
+      return {
+        id: crypto.randomUUID(),
+        date: normalizeDate(r.date) || r.date,
+        type: isIncome ? 'income' : 'expense',
+        amount,
+        category: cat,
+        tag: isIncome ? '収入・予算内' : (categories.find(c=>c.name===cat)?.defaultTag || '毎月・変動'),
+        memo: r.memo || '',
+        shared: false,
+        source: 'paypay'
+      };
+    }).filter(Boolean);
+
+    if (!newTxns.length) throw new Error('有効なデータがありません');
+
+    // プレビューを経由してインポート（チェックボックス付き）
+    window._importRows = newTxns.map(t => ({
+      date: t.date,
+      memo: t.memo,
+      amount: t.amount,
+      category: t.category,
+      tag: t.tag,
+      isExpense: t.type !== 'income',
+      type: t.type,
+      source: 'paypay'
+    }));
+    renderImportPreview(window._importRows);
+    // プレビューをCSVインポートセクションにスクロール
+    document.getElementById('import-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    status.innerHTML = `<span style="color:var(--accent)">✓ ${newTxns.length}件を検出。下のプレビューで確認してインポートしてください。</span>`;
+    document.getElementById('paypay-json').value = '';
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--red)">⚠ JSON の形式が正しくありません。Claude の出力をそのまま貼り付けてください。（${e.message}）</span>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// Suica（Claude in Chrome スクレイプ）
 // ═══════════════════════════════════════════════════
 function copySuicaPrompt() {
   const text = document.getElementById('suica-prompt').textContent;
   navigator.clipboard.writeText(text).then(() => {
-    showToast('プロンプトをコピーしました', 'success', 2000);
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.textContent = 'コピー'; btn.style.color = ''; }, 2000);
   }).catch(() => {
     const el = document.getElementById('suica-prompt');
     const range = document.createRange();
     range.selectNodeContents(el);
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
-    showToast('テキストを選択しました。Ctrl+Cでコピーしてください', 'info', 3000);
   });
 }
 
 function importSuicaJSON() {
-  buildMemoCategoryCache();
   const raw = document.getElementById('suica-json').value.trim();
   const status = document.getElementById('suica-status');
   if (!raw) { status.innerHTML = '<span style="color:var(--amber)">⚠ JSONを貼り付けてください</span>'; return; }
@@ -2579,27 +2515,6 @@ function deleteCategory(id) {
 // ═══════════════════════════════════════════════════
 // DATA UTILS
 // ═══════════════════════════════════════════════════
-
-// JSONエクスポート
-function exportJSON() {
-  const data = {
-    transactions,
-    categories,
-    balanceEntries,
-    exportedAt: new Date().toISOString(),
-    version: 'kakeibo-v2'
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const date = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = `kakeibo-backup-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('バックアップをダウンロードしました', 'success');
-}
-
 function clearAllData() {
   if (!confirm('全データを削除します。この操作は取り消せません。')) return;
   transactions = [];
@@ -2769,7 +2684,6 @@ async function loadFromDrive() {
   } catch(e) {
     console.error('Drive load error:', e);
     setSyncState('error', '読込失敗');
-    showToast('Google Driveからの読み込みに失敗しました', 'error');
   }
 }
 
@@ -2806,7 +2720,6 @@ async function saveToDrive() {
   } catch(e) {
     console.error('Drive save error:', e);
     setSyncState('error', '保存失敗');
-    showToast('Google Driveへの保存に失敗しました', 'error');
   }
 }
 
@@ -2835,52 +2748,6 @@ function initAuth() {
   }
 }
 
-
-
-// モーダルのオーバーレイクリックで閉じる
-document.addEventListener('click', e => {
-  if (e.target.classList && e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('open');
-  }
-});
-
-// ═══════════════════════════════════════════════════
-// Toast通知
-// ═══════════════════════════════════════════════════
-function showToast(msg, type = 'success', duration = 3000) {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  const icon = type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ';
-  toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add('toast-hiding');
-    setTimeout(() => toast.remove(), 200);
-  }, duration);
-}
-
-// ═══════════════════════════════════════════════════
-// キーボードショートカット
-// ═══════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-  // Esc でモーダルを閉じる
-  if (e.key === 'Escape') {
-    const openModal = document.querySelector('.modal-overlay.open');
-    if (openModal) closeModal(openModal.id);
-    const openDetail = document.querySelector('.detail-panel.open');
-    if (openDetail) closeDetailPanel();
-  }
-  // Ctrl+K / Cmd+K で検索にフォーカス
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-    const search = document.getElementById('txn-search');
-    if (search && document.getElementById('page-transactions').classList.contains('active')) {
-      e.preventDefault();
-      search.focus();
-    }
-  }
-});
 
 // ═══════════════════════════════════════════════════
 // BULK SELECT (明細一覧)
@@ -2920,14 +2787,12 @@ function clearBulkSelect() {
 
 function bulkDelete() {
   if (!selectedIds.size) return;
-  const count = selectedIds.size;
-  if (!confirm(`選択した ${count}件 を削除しますか？この操作は取り消せません。`)) return;
+  if (!confirm(`選択した ${selectedIds.size}件 を削除しますか？この操作は取り消せません。`)) return;
   transactions = transactions.filter(t => !selectedIds.has(t.id));
   selectedIds.clear();
   saveData(transactions);
   updateBulkBar();
   renderAll();
-  showToast(`${count}件を削除しました`, 'success');
 }
 
 // ── Event delegation ──
@@ -3236,7 +3101,6 @@ function saveBalanceEntry() {
   saveBalanceData(balanceEntries);
   closeModal('modal-add-balance');
   renderBalanceDashboard();
-  showToast('入金を記録しました', 'success');
 }
 
 // ─── イベントデリゲーション：入金削除 ───
@@ -3258,7 +3122,5 @@ balanceEntries = loadBalanceData();
 renderAll();
 initAuth();
 </script>
-<div class="toast-container" id="toast-container"></div>
-
 </body>
 </html>
